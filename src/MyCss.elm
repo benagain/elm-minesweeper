@@ -7,8 +7,8 @@ import Css.Namespace exposing (namespace)
 
 css =
     (stylesheet << namespace "dreamwriter")
-        [ (.) Tile
-            [ width (em 6)
+        [ (.) Board
+            [ width (em 7)
             , height (em 6)
             , children
                 [ span
@@ -16,16 +16,23 @@ css =
                     , width (em 2)
                     , height (em 2)
                     , border (px 2)
+                    , borderTopColor (hex "ffffff")
                     , borderStyle solid
                     , borderColor (hex "663399")
                     ]
                 ]
             ]
+        , (.) ClearedTile
+            [ (backgroundColor (hex "ffffff")) |> important ]
+        , (.) MarkedTile
+            [ (backgroundColor (hex "ffff00")) |> important ]
         ]
 
 
 type CssClasses
-    = Tile
+    = Board
+    | ClearedTile
+    | MarkedTile
 
 
 grey =

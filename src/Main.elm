@@ -5,6 +5,7 @@ import Html.CssHelpers
 import Html.App as App
 import MyCss exposing (..)
 import List
+import Tile exposing (..)
 
 
 -- import Css exposing (..)
@@ -57,7 +58,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div
-        [ class [ MyCss.Tile ]
+        [ class [ MyCss.Board ]
         ]
         (gameView tiles)
 
@@ -69,21 +70,6 @@ gameView tiles =
         |> List.map tileView
 
 
-type Ground
-    = Bomb
-    | Clear
-
-
-type TileState
-    = Blank
-    | Marked
-    | Cleared Int
-
-
-type alias Tile =
-    ( Ground, TileState )
-
-
 isABomb =
     ( Bomb, Blank )
 
@@ -92,27 +78,9 @@ notABomb =
     ( Clear, Blank )
 
 
-tileView : Tile -> Html a
-tileView tile =
-    span [] [ Html.text (tileText tile) ]
-
-
-tileText : ( Ground, TileState ) -> String
-tileText tile =
-    case tile of
-        ( _, Blank ) ->
-            " "
-
-        ( _, Marked ) ->
-            "?"
-
-        ( _, Cleared n ) ->
-            toString n
-
-
 tiles : List (List Tile)
 tiles =
-    [ [ notABomb, notABomb, notABomb ]
-    , [ notABomb, ( Clear, Cleared 3 ), notABomb ]
+    [ [ notABomb, ( Clear, Cleared 1 ), ( Bomb, Marked ) ]
+    , [ ( Clear, Cleared 2 ), ( Clear, Cleared 3 ), notABomb ]
     , [ notABomb, ( Bomb, Marked ), notABomb ]
     ]

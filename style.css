@@ -1,0 +1,31 @@
+.dreamwriterBoard {
+    width: 7em;
+    height: 6em;
+}
+
+.dreamwriterBoard > span {
+    background-color: #789048;
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
+    border: 2px;
+    float: left;
+    border-style: solid;
+    color: #604848;
+    text-align: center;
+    border-right-color: #607848;
+    border-bottom-color: #607848;
+    border-top-color: #C0D860;
+    border-left-color: #C0D860;
+}
+
+.dreamwriterClearedTile  {
+    border: 2px solid #789048  !important;
+}
+
+.dreamwriterMarkedTile  {
+    background-image: url("flag.svg");
+    background-size: 50%;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
