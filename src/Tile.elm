@@ -3,9 +3,11 @@ module Tile
         ( Model
         , Msg(..)
         , TileState(..)
+        , Ground(..)
         , view
         , bombTile
         , clearTile
+        , clearTile'
         , update
         , showAll
         , markTile
@@ -46,6 +48,10 @@ bombTile =
 
 clearTile =
     ( Clear 0, Blank )
+
+
+clearTile' numBombs =
+    ( Clear numBombs, Blank )
 
 
 update : Msg -> Model -> Model

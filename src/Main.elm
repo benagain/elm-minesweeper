@@ -6,7 +6,7 @@ import Html.App as App
 import MyCss exposing (..)
 import List
 import Dict exposing (Dict)
-import Tile exposing (bombTile, clearTile)
+import Tile exposing (bombTile, clearTile, clearTile')
 
 
 main : Program Never
@@ -109,9 +109,93 @@ indexedTiles list =
             )
 
 
+
+-- indexedTile :
+--     Int
+--     -> Int
+--     -> List (List Tile.Model)
+--     -> ( Tile.Ground, Tile.TileState )
+--     -> ( Index, ( Tile.Ground, Tile.TileState ) )
+
+
+indexedTile x y tiles tile =
+    case tile of
+        ( Tile.Bomb, _ ) ->
+            ( ( x, y ), tile )
+
+        ( Tile.Clear n, _ ) ->
+            ( ( x, y ), clearTile' (numBombsAdjacent ( x, y ) tiles) )
+
+
+numBombsAdjacent : Index -> TileMap -> Int
+numBombsAdjacent index tiles =
+    tiles
+        |> (filt index)
+        |> Dict.size
+
+
+filt : Index -> TileMap -> TileMap
+filt index map =
+    map
+        |> Dict.filter (dropValue (isAdjacent index))
+        |> Dict.filter (dropKey isBomb)
+
+
+isAdjacent : Index -> Index -> Bool
+isAdjacent ( x, y ) ( x', y' ) =
+    (x == x' || x == x' + 1 || x == x' - 1)
+        && (y == y' || y == y' + 1 || y == y' - 1)
+
+
+isBomb : Tile.Model -> Bool
+isBomb ( tileType, _ ) =
+    case tileType of
+        Tile.Bomb ->
+            True
+
+        Tile.Clear _ ->
+            False
+
+
+dropValue : (Index -> Bool) -> Index -> Tile.Model -> Bool
+dropValue f a _ =
+    (f a)
+
+
+dropKey : (Tile.Model -> Bool) -> Index -> Tile.Model -> Bool
+dropKey f _ b =
+    (f b)
+
+
 hashTiles : List (List Tile.Model) -> Dict Index Tile.Model
 hashTiles list =
     Dict.fromList (List.foldr (++) [] (indexedTiles tiles))
+        |> addKnowledge
+
+
+addKnowledge : TileMap -> TileMap
+addKnowledge tiles =
+    tiles |> Dict.map (know tiles)
+
+
+know : TileMap -> Index -> Tile.Model -> Tile.Model
+know tiles index ( tile, state ) =
+    case tile of
+        Tile.Bomb ->
+            ( tile, state )
+
+        Tile.Clear _ ->
+            clearTile' (numBombsAdjacent index tiles)
+
+
+
+-- know : Dict ( Index, Tile.Model ) -> Index -> Tile.Model -> Tile.Model
+-- know tiles index ( tile, state ) =
+--     case tile of
+--         Tile.Bomb ->
+--             ( tile, state )
+-- Tile.Clear _ ->
+--     clearTile' (numBombsAdjacent index tiles)
 
 
 tiles : List (List Tile.Model)
