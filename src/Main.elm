@@ -52,7 +52,19 @@ update msg model =
 
 updateTiles : Index -> Tile.Msg -> TileMap -> TileMap
 updateTiles xy msg tiles =
-    Dict.update xy (Maybe.map (Tile.update msg)) tiles
+    let
+        update =
+            Dict.update xy (Maybe.map (Tile.update msg)) tiles
+
+        boom =
+            Dict.get xy update
+    in
+        case boom of
+            Just ( _, Tile.Detonated ) ->
+                Dict.map (\xy a -> Tile.expose a) update
+
+            _ ->
+                update
 
 
 

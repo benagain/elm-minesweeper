@@ -1,4 +1,16 @@
-module Tile exposing (Model, view, bombTile, clearTile, Msg, update, Msg(..), showAll, markTile)
+module Tile
+    exposing
+        ( Model
+        , Msg(..)
+        , TileState(..)
+        , view
+        , bombTile
+        , clearTile
+        , update
+        , showAll
+        , markTile
+        , expose
+        )
 
 import Html exposing (Html, button, div, text, span)
 import Html.Events exposing (onClick, defaultOptions)
@@ -9,13 +21,13 @@ import MyCss
 
 type Ground
     = Bomb
-    | Clear
+    | Clear Int
 
 
 type TileState
     = Blank
     | Marked
-    | Cleared Int
+    | Cleared
     | Detonated
 
 
@@ -33,7 +45,7 @@ bombTile =
 
 
 clearTile =
-    ( Clear, Blank )
+    ( Clear 0, Blank )
 
 
 update : Msg -> Model -> Model
@@ -55,8 +67,11 @@ view tile =
         ( _, Marked ) ->
             viewWithNoText (Just MyCss.MarkedTile)
 
-        ( _, Cleared n ) ->
+        ( Clear n, Cleared ) ->
             viewWithText (Just MyCss.ClearedTile) (toString n)
+
+        ( Bomb, Cleared ) ->
+            viewWithNoText (Just MyCss.DetonatedTile)
 
         ( _, Detonated ) ->
             viewWithNoText (Just MyCss.DetonatedTile)
@@ -110,7 +125,11 @@ sweepTile ( ground, state ) =
             ( Bomb, Detonated )
 
         _ ->
-            ( ground, Cleared 1 )
+            ( ground, Cleared )
+
+
+expose ( ground, state ) =
+    ( ground, Cleared )
 
 
 { id, class, classList } =
