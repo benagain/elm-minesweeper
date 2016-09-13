@@ -2,23 +2,25 @@ module Tile
     exposing
         ( Model
         , Msg(..)
-        , TileState(..)
         , Ground(..)
         , view
-        , bombTile
-        , clearTile
-        , clearTile'
+        , initBombTile
+        , initClearTile
+        , addBombCount
         , update
-        , showAll
+        , didDetonate
         , markTile
         , expose
         )
 
 import Html exposing (Html, button, div, text, span)
 import Html.Events exposing (onClick, defaultOptions)
+import HtmlExtras exposing (onRightClick)
 import Html.CssHelpers
-import Json.Decode as Json exposing ((:=))
 import MyCss
+
+
+-- Model
 
 
 type Ground
@@ -42,16 +44,24 @@ type Msg
     | DoMark
 
 
-bombTile =
-    { clearTile | ground = Bomb }
+
+-- Init
 
 
-clearTile =
+initBombTile =
+    { initClearTile | ground = Bomb }
+
+
+initClearTile =
     { ground = Clear, state = Blank, adjacentBombs = 0 }
 
 
-clearTile' numBombs =
-    { clearTile | adjacentBombs = numBombs }
+addBombCount count tile =
+    { tile | adjacentBombs = count }
+
+
+
+-- Update
 
 
 update : Msg -> Model -> Model
@@ -62,6 +72,31 @@ update msg model =
 
         DoMark ->
             markTile model
+
+
+sweepTile tile =
+    case tile.ground of
+        Bomb ->
+            { tile | state = Detonated }
+
+        _ ->
+            expose tile
+
+
+markTile tile =
+    { tile | state = Marked }
+
+
+expose tile =
+    { tile | state = Cleared }
+
+
+didDetonate tile =
+    tile.state == Detonated
+
+
+
+-- View
 
 
 view : Model -> Html Msg
@@ -103,39 +138,6 @@ mapWithDefault fn b a =
 
         Just a ->
             fn a
-
-
-onRightClick : msg -> Html.Attribute msg
-onRightClick message =
-    Html.Events.onWithOptions
-        "contextmenu"
-        { defaultOptions | preventDefault = True }
-        (Json.succeed message)
-
-
-showAll tiles =
-    List.map showAllRow tiles
-
-
-showAllRow tiles =
-    List.map markTile tiles
-
-
-markTile tile =
-    { tile | state = Marked }
-
-
-sweepTile tile =
-    case tile.ground of
-        Bomb ->
-            { tile | state = Detonated }
-
-        _ ->
-            { tile | state = Cleared }
-
-
-expose tile =
-    { tile | state = Cleared }
 
 
 { id, class, classList } =
