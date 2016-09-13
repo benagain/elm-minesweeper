@@ -5,7 +5,7 @@ import Html.CssHelpers
 import Html.App as App
 import MyCss exposing (..)
 import List
-import Tile exposing (..)
+import Tile exposing (bombTile, clearTile)
 
 
 -- import Css exposing (..)
@@ -22,12 +22,12 @@ main =
 
 
 type alias Model =
-    Int
+    List (List Tile.Model)
 
 
 model : Model
 model =
-    0
+    tiles
 
 
 
@@ -35,21 +35,66 @@ model =
 
 
 type Msg
-    = Increment
-    | Decrement
+    = MMM ( Int, Int ) Tile.Msg
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        Increment ->
-            model + 1
+        MMM ( x, y ) m ->
+            let
+                updated =
+                    indexMap 0 (updateRow y) model
+            in
+                updated
 
-        Decrement ->
-            model - 1
+
+
+-- ++ updated
+
+
+updateRow : Int -> List (Tile.Model) -> List (Tile.Model)
+updateRow index list =
+    list |> indexMap index (updateWhen 0 0)
 
 
 
+-- list |> List.map (List.indexedMap (updateWhen index))
+
+
+updateWhen : Int -> Int -> Tile.Model -> Tile.Model
+updateWhen when index tile =
+    case when == index of
+        True ->
+            Tile.showTile tile
+
+        False ->
+            tile
+
+
+indexMap : Int -> (a -> a) -> List a -> List a
+indexMap index fn list =
+    iindexMap index fn list
+
+
+iindexMap : Int -> (a -> a) -> List a -> List a
+iindexMap index fn list =
+    case ( index, list ) of
+        ( _, [] ) ->
+            []
+
+        ( 0, h :: t ) ->
+            (fn h) :: t
+
+        ( _, h :: t ) ->
+            h :: iindexMap (index - 1) fn t
+
+
+
+-- Tile.DoClear ->
+--     model
+-- Tile.DoMark ->
+--     model
 -- VIEW
 
 
@@ -60,27 +105,42 @@ view model =
     div
         [ class [ MyCss.Board ]
         ]
-        (gameView tiles)
+        (gameView model)
 
 
-gameView : List (List Tile) -> List (Html.Html msg)
+
+-- (gameView tiles)
+-- gameView : List (List Tile.Model) -> List (Html msg)
+
+
+gameView : List (List Tile.Model) -> List (Html Msg)
 gameView tiles =
     tiles
         |> List.foldr (++) []
-        |> List.map tileView
+        |> List.map myTileView
 
 
-isABomb =
-    ( Bomb, Blank )
+myTileView : Tile.Model -> Html Msg
+myTileView tile =
+    App.map (MMM ( 1, 1 )) (Tile.view tile)
 
 
-notABomb =
-    ( Clear, Blank )
-
-
-tiles : List (List Tile)
+tiles : List (List Tile.Model)
 tiles =
-    [ [ notABomb, ( Clear, Cleared 1 ), ( Bomb, Marked ) ]
-    , [ ( Clear, Cleared 2 ), ( Clear, Cleared 3 ), notABomb ]
-    , [ notABomb, ( Bomb, Marked ), notABomb ]
+    [ [ clearTile, clearTile, bombTile ]
+    , [ clearTile, clearTile, clearTile ]
+    , [ clearTile, bombTile, clearTile ]
     ]
+
+
+opptiles : List (List Tile.Model)
+opptiles =
+    Tile.showAll tiles
+
+
+
+-- tiles =
+--     [ [ notABomb, ( Tile.Clear, Tile.Cleared 1 ), ( Tile.Bomb, Tile.Marked ) ]
+--     , [ ( Tile.Clear, Tile.Cleared 2 ), ( Tile.Clear, Tile.Cleared 3 ), notABomb ]
+--     , [ notABomb, ( Tile.Bomb, Tile.Marked ), notABomb ]
+--     ]

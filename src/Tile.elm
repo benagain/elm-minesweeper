@@ -1,6 +1,7 @@
-module Tile exposing (..)
+module Tile exposing (Model, view, bombTile, clearTile, Msg, update, Msg(..), showAll, showTile)
 
 import Html exposing (Html, button, div, text, span)
+import Html.Events exposing (onClick)
 import Html.CssHelpers
 import MyCss
 
@@ -16,39 +17,51 @@ type TileState
     | Cleared Int
 
 
-type alias Tile =
+type alias Model =
     ( Ground, TileState )
 
 
-tileView : Tile -> Html a
-tileView tile =
+type Msg
+    = DoClear
+    | DoMark
+
+
+update : Msg -> Model -> Model
+update msg model =
+    model
+
+
+bombTile =
+    ( Bomb, Blank )
+
+
+clearTile =
+    ( Clear, Blank )
+
+
+view : Model -> Html Msg
+view tile =
     case tile of
         ( _, Blank ) ->
-            tileyView2 Nothing
+            viewWithNoText Nothing
 
         ( _, Marked ) ->
-            tileyView2 (Just MyCss.MarkedTile)
+            viewWithNoText (Just MyCss.MarkedTile)
 
         ( _, Cleared n ) ->
-            tileyView (Just MyCss.ClearedTile) (toString n)
+            viewWithText (Just MyCss.ClearedTile) (toString n)
 
 
-tileyView2 : Maybe MyCss.CssClasses -> Html a
-tileyView2 customCss =
-    let
-        cssList =
-            mapWithDefault (\css -> [ class [ css ] ]) [] customCss
-    in
-        span cssList []
+viewWithNoText css =
+    span ((cssFor css) ++ [ onClick DoClear ]) []
 
 
-tileyView : Maybe MyCss.CssClasses -> String -> Html a
-tileyView customCss text =
-    let
-        cssList =
-            mapWithDefault (\css -> [ class [ css ] ]) [] customCss
-    in
-        span cssList [ Html.text (text) ]
+viewWithText css text =
+    span (cssFor css) [ Html.text (text) ]
+
+
+cssFor css =
+    mapWithDefault (\css -> [ class [ css ] ]) [] css
 
 
 mapWithDefault : (a -> b) -> b -> Maybe a -> b
@@ -59,6 +72,20 @@ mapWithDefault fn b a =
 
         Just a ->
             fn a
+
+
+showAll tiles =
+    List.map showAllRow tiles
+
+
+showAllRow tiles =
+    List.map showTile tiles
+
+
+showTile tile =
+    case tile of
+        ( a, b ) ->
+            ( a, Marked )
 
 
 { id, class, classList } =
