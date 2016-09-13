@@ -3,15 +3,23 @@ module Main exposing (main)
 import Html exposing (Html, button, div, text, span)
 import Html.CssHelpers
 import Html.App as App
+import Html.Attributes exposing (style)
 import MyCss exposing (..)
 import List
 import Dict exposing (Dict)
 import Tile exposing (initBomb, initClear)
+import Random.Extra
+import Random
 
 
 main : Program Never
 main =
-    App.beginnerProgram { model = model, view = view, update = update }
+    App.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
 
 
 
@@ -30,21 +38,22 @@ type alias Model =
     TileMap
 
 
-type Msg
-    = SetTileState Index Tile.Msg
-
-
 
 -- Init
 
 
-model : Model
-model =
-    toModel tiles
+init : ( Model, Cmd Msg )
+init =
+    ( Dict.empty, Random.generate NewBoard randomBoard )
+
+
+
+-- model : Model
+-- model =
 
 
 toModel : List (List Tile.Model) -> Dict Index Tile.Model
-toModel list =
+toModel tiles =
     tiles
         |> indexedTiles
         |> List.foldr (++) []
@@ -113,11 +122,28 @@ onValue f _ b =
 -- UPDATE
 
 
-update : Msg -> Model -> Model
+type Msg
+    = NewGame
+    | NewBoard (List (List Tile.Model))
+    | SetTileState Index Tile.Msg
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NewGame ->
+            ( model, Random.generate NewBoard randomBoard )
+
+        NewBoard board ->
+            ( toModel board, Cmd.none )
+
         SetTileState xy msg ->
-            updateTiles xy msg model
+            ( updateTiles xy msg model, Cmd.none )
+
+
+randomBoard : Random.Generator (List (List Tile.Model))
+randomBoard =
+    randomListGenerator 5
 
 
 updateTiles : Index -> Tile.Msg -> TileMap -> TileMap
@@ -145,6 +171,7 @@ view : Model -> Html Msg
 view model =
     div
         [ class [ MyCss.Board ]
+        , style [ ( "width", toString ((sqrt (toFloat (Dict.size model))) * 2.4) ++ "em" ) ]
         ]
         (gameView model)
 
@@ -170,6 +197,57 @@ tiles =
     , [ initClear, initClear, initClear ]
     , [ initClear, initBomb, initClear ]
     ]
+
+
+randomTiles : List (List Tile.Model)
+randomTiles =
+    let
+        seed =
+            Random.initialSeed (12345)
+
+        ( t, s ) =
+            Random.step (randomListGenerator 5) seed
+    in
+        t
+
+
+randomListGenerator : Int -> Random.Generator (List (List Tile.Model))
+randomListGenerator n =
+    Random.list n (Random.list n bombFlip)
+
+
+
+-- let
+--     ( val, nexGen ) =
+--         Random.bool ()
+--             Random.initialSeed
+--             31415
+-- in
+--     Random.step bombFlip seed0
+-- Random.generate (Random.list n bombFlip)
+
+
+bombFlip : Random.Generator Tile.Model
+bombFlip =
+    Random.map
+        (\b ->
+            if b then
+                initBomb
+            else
+                initClear
+        )
+        (Random.Extra.oneIn 10)
+
+
+
+-- Random.map
+--     (\b ->
+--         if b then
+--             initClear
+--         else
+--             initBomb
+--     )
+--     Random.bool
 
 
 { id, class, classList } =
