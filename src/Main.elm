@@ -123,7 +123,7 @@ indexedTile x y tiles tile =
         ( Tile.Bomb, _, _ ) ->
             ( ( x, y ), tile )
 
-        ( Tile.Clear n, _, _ ) ->
+        ( Tile.Clear, _, _ ) ->
             ( ( x, y ), clearTile' (numBombsAdjacent ( x, y ) tiles) )
 
 
@@ -153,7 +153,7 @@ isBomb ( tileType, _, _ ) =
         Tile.Bomb ->
             True
 
-        Tile.Clear _ ->
+        Tile.Clear ->
             False
 
 
@@ -184,7 +184,7 @@ know tiles index ( tile, state, adjacent ) =
         Tile.Bomb ->
             ( tile, state, adjacent )
 
-        Tile.Clear _ ->
+        Tile.Clear ->
             clearTile' (numBombsAdjacent index tiles)
 
 

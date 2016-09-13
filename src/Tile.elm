@@ -23,7 +23,7 @@ import MyCss
 
 type Ground
     = Bomb
-    | Clear Int
+    | Clear
 
 
 type TileState
@@ -47,11 +47,11 @@ bombTile =
 
 
 clearTile =
-    ( Clear 0, Blank, 0 )
+    ( Clear, Blank, 0 )
 
 
 clearTile' numBombs =
-    ( Clear numBombs, Blank, numBombs )
+    ( Clear, Blank, numBombs )
 
 
 update : Msg -> Model -> Model
@@ -73,7 +73,7 @@ view tile =
         ( _, Marked, _ ) ->
             viewWithNoText (Just MyCss.MarkedTile)
 
-        ( Clear n, Cleared, _ ) ->
+        ( Clear, Cleared, n ) ->
             viewWithText (Just MyCss.ClearedTile) (toString n)
 
         ( Bomb, Cleared, _ ) ->
