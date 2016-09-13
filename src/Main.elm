@@ -5,11 +5,8 @@ import Html.CssHelpers
 import Html.App as App
 import MyCss exposing (..)
 import List
+import Dict exposing (Dict)
 import Tile exposing (bombTile, clearTile)
-
-
--- import Css exposing (..)
--- import Html.Events exposing (onClick)
 
 
 main : Program Never
@@ -21,13 +18,21 @@ main =
 -- MODEL
 
 
+type alias Index =
+    ( Int, Int )
+
+
+type alias TileMap =
+    Dict Index Tile.Model
+
+
 type alias Model =
     TileMap
 
 
 model : Model
 model =
-    indexedTiles tiles
+    hashTiles tiles
 
 
 
@@ -35,44 +40,25 @@ model =
 
 
 type Msg
-    = SetTileState ( Int, Int ) Tile.Msg
+    = SetTileState Index Tile.Msg
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        SetTileState ( x, y ) m ->
-            let
-                updated =
-                    updateMap ( x, y ) model
-            in
-                updated
+        SetTileState xy msg ->
+            updateTiles xy model
 
 
-updateMap : ( Int, Int ) -> TileMap -> TileMap
-updateMap xy map =
-    map |> List.map (updateRow xy)
+updateTiles : Index -> TileMap -> TileMap
+updateTiles xy tiles =
+    Dict.update xy (Maybe.map Tile.showTile) tiles
 
 
-updateRow : ( Int, Int ) -> List (XYTile) -> List (XYTile)
-updateRow xy row =
-    row |> List.map (updateTile xy)
+
+-- View
 
 
-updateTile : ( Int, Int ) -> XYTile -> XYTile
-updateTile xy' ( x, y, tile ) =
-    let
-        updated =
-            if xy' == ( x, y ) then
-                Tile.showTile tile
-            else
-                tile
-    in
-        ( x, y, updated )
-
-
-{ id, class, classList } =
-    Html.CssHelpers.withNamespace "dreamwriter"
 view : Model -> Html Msg
 view model =
     div
@@ -83,22 +69,21 @@ view model =
 
 gameView : TileMap -> List (Html Msg)
 gameView tiles =
-    tiles
-        |> List.foldr (++) []
-        |> List.map myTileView
+    tiles |> Dict.foldr tileViewList []
 
 
-myTileView : XYTile -> Html Msg
-myTileView ( x, y, tile ) =
-    App.map (SetTileState ( x, y )) (Tile.view tile)
+tileViewList : Index -> Tile.Model -> List (Html Msg) -> List (Html Msg)
+tileViewList xy tile list =
+    (tileView xy tile) :: list
+
+
+tileView : Index -> Tile.Model -> Html Msg
+tileView xy tile =
+    App.map (SetTileState xy) (Tile.view tile)
 
 
 type alias XYTile =
-    ( Int, Int, Tile.Model )
-
-
-type alias TileMap =
-    List (List XYTile)
+    ( Index, Tile.Model )
 
 
 indexedTiles : List (List Tile.Model) -> List (List XYTile)
@@ -108,8 +93,13 @@ indexedTiles list =
             (\x row ->
                 row
                     |> List.indexedMap
-                        (\y tile -> ( x, y, tile ))
+                        (\y tile -> ( ( x, y ), tile ))
             )
+
+
+hashTiles : List (List Tile.Model) -> Dict Index Tile.Model
+hashTiles list =
+    Dict.fromList (List.foldr (++) [] (indexedTiles tiles))
 
 
 tiles : List (List Tile.Model)
@@ -131,3 +121,7 @@ opptiles =
 --     , [ ( Tile.Clear, Tile.Cleared 2 ), ( Tile.Clear, Tile.Cleared 3 ), notABomb ]
 --     , [ notABomb, ( Tile.Bomb, Tile.Marked ), notABomb ]
 --     ]
+
+
+{ id, class, classList } =
+    Html.CssHelpers.withNamespace "dreamwriter"
