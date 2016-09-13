@@ -22,12 +22,12 @@ main =
 
 
 type alias Model =
-    List (List Tile.Model)
+    TileMap
 
 
 model : Model
 model =
-    tiles
+    indexedTiles tiles
 
 
 
@@ -35,16 +35,16 @@ model =
 
 
 type Msg
-    = MMM ( Int, Int ) Tile.Msg
+    = SetTileState ( Int, Int ) Tile.Msg
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
-        MMM ( x, y ) m ->
+        SetTileState ( x, y ) m ->
             let
                 updated =
-                    indexMap 0 (updateRow y) model
+                    indexMap x (updateRow y) model
             in
                 updated
 
@@ -53,7 +53,7 @@ update msg model =
 -- ++ updated
 
 
-updateRow : Int -> List (Tile.Model) -> List (Tile.Model)
+updateRow : Int -> List XYTile -> List XYTile
 updateRow index list =
     list |> indexMap index (updateWhen 0 0)
 
@@ -62,14 +62,14 @@ updateRow index list =
 -- list |> List.map (List.indexedMap (updateWhen index))
 
 
-updateWhen : Int -> Int -> Tile.Model -> Tile.Model
-updateWhen when index tile =
+updateWhen : Int -> Int -> XYTile -> XYTile
+updateWhen when index ( x, y, tile ) =
     case when == index of
         True ->
-            Tile.showTile tile
+            ( x, y, (Tile.showTile tile) )
 
         False ->
-            tile
+            ( x, y, tile )
 
 
 indexMap : Int -> (a -> a) -> List a -> List a
@@ -113,16 +113,35 @@ view model =
 -- gameView : List (List Tile.Model) -> List (Html msg)
 
 
-gameView : List (List Tile.Model) -> List (Html Msg)
+gameView : TileMap -> List (Html Msg)
 gameView tiles =
     tiles
         |> List.foldr (++) []
         |> List.map myTileView
 
 
-myTileView : Tile.Model -> Html Msg
-myTileView tile =
-    App.map (MMM ( 1, 1 )) (Tile.view tile)
+myTileView : XYTile -> Html Msg
+myTileView ( x, y, tile ) =
+    App.map (SetTileState ( x, y )) (Tile.view tile)
+
+
+type alias XYTile =
+    ( Int, Int, Tile.Model )
+
+
+type alias TileMap =
+    List (List XYTile)
+
+
+indexedTiles : List (List Tile.Model) -> List (List XYTile)
+indexedTiles list =
+    List.indexedMap
+        (\x a ->
+            List.indexedMap
+                (\y t -> ( x, y, t ))
+                a
+        )
+        list
 
 
 tiles : List (List Tile.Model)
