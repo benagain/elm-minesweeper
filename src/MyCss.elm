@@ -33,6 +33,7 @@ type CssClasses
     = Board
     | ClearedTile
     | MarkedTile
+    | DetonatedTile
 
 
 grey =

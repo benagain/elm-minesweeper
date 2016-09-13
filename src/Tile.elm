@@ -1,4 +1,4 @@
-module Tile exposing (Model, view, bombTile, clearTile, Msg, update, Msg(..), showAll, showTile)
+module Tile exposing (Model, view, bombTile, clearTile, Msg, update, Msg(..), showAll, markTile)
 
 import Html exposing (Html, button, div, text, span)
 import Html.Events exposing (onClick, defaultOptions)
@@ -16,6 +16,7 @@ type TileState
     = Blank
     | Marked
     | Cleared Int
+    | Detonated
 
 
 type alias Model =
@@ -39,10 +40,10 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         DoClear ->
-            model
+            sweepTile model
 
         DoMark ->
-            showTile model
+            markTile model
 
 
 view : Model -> Html Msg
@@ -56,6 +57,9 @@ view tile =
 
         ( _, Cleared n ) ->
             viewWithText (Just MyCss.ClearedTile) (toString n)
+
+        ( _, Detonated ) ->
+            viewWithNoText (Just MyCss.DetonatedTile)
 
 
 viewWithNoText css =
@@ -88,22 +92,25 @@ onRightClick message =
         (Json.succeed message)
 
 
-
----onWithOptions "contextmenu" { defaultOptions | preventDefault = True } Json.Decode.value (\_ -> Signal.message address message)
-
-
 showAll tiles =
     List.map showAllRow tiles
 
 
 showAllRow tiles =
-    List.map showTile tiles
+    List.map markTile tiles
 
 
-showTile tile =
-    case tile of
-        ( a, b ) ->
-            ( a, Marked )
+markTile ( ground, state ) =
+    ( ground, Marked )
+
+
+sweepTile ( ground, state ) =
+    case ground of
+        Bomb ->
+            ( Bomb, Detonated )
+
+        _ ->
+            ( ground, Cleared 1 )
 
 
 { id, class, classList } =
