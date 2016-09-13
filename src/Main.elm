@@ -47,12 +47,12 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         SetTileState xy msg ->
-            updateTiles xy model
+            updateTiles xy msg model
 
 
-updateTiles : Index -> TileMap -> TileMap
-updateTiles xy tiles =
-    Dict.update xy (Maybe.map Tile.showTile) tiles
+updateTiles : Index -> Tile.Msg -> TileMap -> TileMap
+updateTiles xy msg tiles =
+    Dict.update xy (Maybe.map (Tile.update msg)) tiles
 
 
 

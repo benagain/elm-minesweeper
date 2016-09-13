@@ -1,8 +1,9 @@
 module Tile exposing (Model, view, bombTile, clearTile, Msg, update, Msg(..), showAll, showTile)
 
 import Html exposing (Html, button, div, text, span)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, defaultOptions)
 import Html.CssHelpers
+import Json.Decode as Json exposing ((:=))
 import MyCss
 
 
@@ -26,17 +27,22 @@ type Msg
     | DoMark
 
 
-update : Msg -> Model -> Model
-update msg model =
-    model
-
-
 bombTile =
     ( Bomb, Blank )
 
 
 clearTile =
     ( Clear, Blank )
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        DoClear ->
+            model
+
+        DoMark ->
+            showTile model
 
 
 view : Model -> Html Msg
@@ -53,7 +59,7 @@ view tile =
 
 
 viewWithNoText css =
-    span ((cssFor css) ++ [ onClick DoClear ]) []
+    span ((cssFor css) ++ [ onClick DoClear, onRightClick DoMark ]) []
 
 
 viewWithText css text =
@@ -72,6 +78,18 @@ mapWithDefault fn b a =
 
         Just a ->
             fn a
+
+
+onRightClick : msg -> Html.Attribute msg
+onRightClick message =
+    Html.Events.onWithOptions
+        "contextmenu"
+        { defaultOptions | preventDefault = True }
+        (Json.succeed message)
+
+
+
+---onWithOptions "contextmenu" { defaultOptions | preventDefault = True } Json.Decode.value (\_ -> Signal.message address message)
 
 
 showAll tiles =
