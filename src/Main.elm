@@ -59,8 +59,8 @@ updateTiles xy msg tiles =
         boom =
             Dict.get xy update
     in
-        case boom of
-            Just ( _, Tile.Detonated, _ ) ->
+        case Maybe.map .state boom of
+            Just (Tile.Detonated) ->
                 Dict.map (\xy a -> Tile.expose a) update
 
             _ ->
@@ -119,11 +119,11 @@ indexedTiles list =
 
 
 indexedTile x y tiles tile =
-    case tile of
-        ( Tile.Bomb, _, _ ) ->
+    case tile.ground of
+        Tile.Bomb ->
             ( ( x, y ), tile )
 
-        ( Tile.Clear, _, _ ) ->
+        Tile.Clear ->
             ( ( x, y ), clearTile' (numBombsAdjacent ( x, y ) tiles) )
 
 
@@ -148,8 +148,8 @@ isAdjacent ( x, y ) ( x', y' ) =
 
 
 isBomb : Tile.Model -> Bool
-isBomb ( tileType, _, _ ) =
-    case tileType of
+isBomb { ground } =
+    case ground of
         Tile.Bomb ->
             True
 
@@ -179,10 +179,10 @@ addKnowledge tiles =
 
 
 know : TileMap -> Index -> Tile.Model -> Tile.Model
-know tiles index ( tile, state, adjacent ) =
-    case tile of
+know tiles index tile =
+    case tile.ground of
         Tile.Bomb ->
-            ( tile, state, adjacent )
+            tile
 
         Tile.Clear ->
             clearTile' (numBombsAdjacent index tiles)

@@ -34,7 +34,7 @@ type TileState
 
 
 type alias Model =
-    ( Ground, TileState, Int )
+    { ground : Ground, state : TileState, adjacentBombs : Int }
 
 
 type Msg
@@ -43,15 +43,15 @@ type Msg
 
 
 bombTile =
-    ( Bomb, Blank, 0 )
+    { clearTile | ground = Bomb }
 
 
 clearTile =
-    ( Clear, Blank, 0 )
+    { ground = Clear, state = Blank, adjacentBombs = 0 }
 
 
 clearTile' numBombs =
-    ( Clear, Blank, numBombs )
+    { clearTile | adjacentBombs = numBombs }
 
 
 update : Msg -> Model -> Model
@@ -65,8 +65,8 @@ update msg model =
 
 
 view : Model -> Html Msg
-view tile =
-    case tile of
+view { ground, state, adjacentBombs } =
+    case ( ground, state, adjacentBombs ) of
         ( _, Blank, _ ) ->
             viewWithNoText Nothing
 
@@ -121,21 +121,21 @@ showAllRow tiles =
     List.map markTile tiles
 
 
-markTile ( ground, state, adjacent ) =
-    ( ground, Marked, adjacent )
+markTile tile =
+    { tile | state = Marked }
 
 
-sweepTile ( ground, state, adjacent ) =
-    case ground of
+sweepTile tile =
+    case tile.ground of
         Bomb ->
-            ( Bomb, Detonated, adjacent )
+            { tile | state = Detonated }
 
         _ ->
-            ( ground, Cleared, adjacent )
+            { tile | state = Cleared }
 
 
-expose ( ground, state, adjacent ) =
-    ( ground, Cleared, adjacent )
+expose tile =
+    { tile | state = Cleared }
 
 
 { id, class, classList } =
