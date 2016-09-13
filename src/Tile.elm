@@ -1,16 +1,15 @@
 module Tile
     exposing
         ( Model
-        , Msg(..)
-        , Ground(..)
+        , Msg
         , view
-        , initBombTile
-        , initClearTile
+        , initBomb
+        , initClear
         , addBombCount
         , update
-        , didDetonate
-        , markTile
         , expose
+        , didDetonate
+        , isBomb
         )
 
 import Html exposing (Html, button, div, text, span)
@@ -48,11 +47,11 @@ type Msg
 -- Init
 
 
-initBombTile =
-    { initClearTile | ground = Bomb }
+initBomb =
+    { initClear | ground = Bomb }
 
 
-initClearTile =
+initClear =
     { ground = Clear, state = Blank, adjacentBombs = 0 }
 
 
@@ -71,7 +70,7 @@ update msg model =
             sweepTile model
 
         DoMark ->
-            markTile model
+            mark model
 
 
 sweepTile tile =
@@ -83,7 +82,7 @@ sweepTile tile =
             expose tile
 
 
-markTile tile =
+mark tile =
     { tile | state = Marked }
 
 
@@ -93,6 +92,16 @@ expose tile =
 
 didDetonate tile =
     tile.state == Detonated
+
+
+isBomb : Model -> Bool
+isBomb { ground } =
+    case ground of
+        Bomb ->
+            True
+
+        Clear ->
+            False
 
 
 

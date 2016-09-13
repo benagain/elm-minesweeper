@@ -6,7 +6,7 @@ import Html.App as App
 import MyCss exposing (..)
 import List
 import Dict exposing (Dict)
-import Tile exposing (initBombTile, initClearTile)
+import Tile exposing (initBomb, initClear)
 
 
 main : Program Never
@@ -89,7 +89,7 @@ numBombsAdjacent : Index -> TileMap -> Int
 numBombsAdjacent index tiles =
     tiles
         |> Dict.filter (onKey <| isAdjacent index)
-        |> Dict.filter (onValue isBomb)
+        |> Dict.filter (onValue Tile.isBomb)
         |> Dict.size
 
 
@@ -99,22 +99,12 @@ isAdjacent ( x, y ) ( x', y' ) =
         && (y == y' || y == y' + 1 || y == y' - 1)
 
 
-isBomb : Tile.Model -> Bool
-isBomb { ground } =
-    case ground of
-        Tile.Bomb ->
-            True
-
-        Tile.Clear ->
-            False
-
-
-onKey : (Index -> Bool) -> Index -> Tile.Model -> Bool
+onKey : (comparable -> b) -> comparable -> a -> b
 onKey f a _ =
     (f a)
 
 
-onValue : (Tile.Model -> Bool) -> Index -> Tile.Model -> Bool
+onValue : (a -> b) -> comparable -> a -> b
 onValue f _ b =
     (f b)
 
@@ -133,18 +123,18 @@ update msg model =
 updateTiles : Index -> Tile.Msg -> TileMap -> TileMap
 updateTiles xy msg tiles =
     let
-        update =
+        updated =
             Dict.update xy (Maybe.map (Tile.update msg)) tiles
 
         boom =
-            Dict.get xy update
+            Dict.get xy updated
     in
         case Maybe.map Tile.didDetonate boom of
             Just True ->
-                Dict.map (\xy a -> Tile.expose a) update
+                updated |> Dict.map (onValue Tile.expose)
 
             _ ->
-                update
+                updated
 
 
 
@@ -176,9 +166,9 @@ tileView xy tile =
 
 tiles : List (List Tile.Model)
 tiles =
-    [ [ initClearTile, initClearTile, initBombTile ]
-    , [ initClearTile, initClearTile, initClearTile ]
-    , [ initClearTile, initBombTile, initClearTile ]
+    [ [ initClear, initClear, initBomb ]
+    , [ initClear, initClear, initClear ]
+    , [ initClear, initBomb, initClear ]
     ]
 
 
