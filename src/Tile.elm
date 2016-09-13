@@ -34,7 +34,7 @@ type TileState
 
 
 type alias Model =
-    ( Ground, TileState )
+    ( Ground, TileState, Int )
 
 
 type Msg
@@ -43,15 +43,15 @@ type Msg
 
 
 bombTile =
-    ( Bomb, Blank )
+    ( Bomb, Blank, 0 )
 
 
 clearTile =
-    ( Clear 0, Blank )
+    ( Clear 0, Blank, 0 )
 
 
 clearTile' numBombs =
-    ( Clear numBombs, Blank )
+    ( Clear numBombs, Blank, numBombs )
 
 
 update : Msg -> Model -> Model
@@ -67,19 +67,19 @@ update msg model =
 view : Model -> Html Msg
 view tile =
     case tile of
-        ( _, Blank ) ->
+        ( _, Blank, _ ) ->
             viewWithNoText Nothing
 
-        ( _, Marked ) ->
+        ( _, Marked, _ ) ->
             viewWithNoText (Just MyCss.MarkedTile)
 
-        ( Clear n, Cleared ) ->
+        ( Clear n, Cleared, _ ) ->
             viewWithText (Just MyCss.ClearedTile) (toString n)
 
-        ( Bomb, Cleared ) ->
+        ( Bomb, Cleared, _ ) ->
             viewWithNoText (Just MyCss.DetonatedTile)
 
-        ( _, Detonated ) ->
+        ( _, Detonated, _ ) ->
             viewWithNoText (Just MyCss.DetonatedTile)
 
 
@@ -121,21 +121,21 @@ showAllRow tiles =
     List.map markTile tiles
 
 
-markTile ( ground, state ) =
-    ( ground, Marked )
+markTile ( ground, state, adjacent ) =
+    ( ground, Marked, adjacent )
 
 
-sweepTile ( ground, state ) =
+sweepTile ( ground, state, adjacent ) =
     case ground of
         Bomb ->
-            ( Bomb, Detonated )
+            ( Bomb, Detonated, adjacent )
 
         _ ->
-            ( ground, Cleared )
+            ( ground, Cleared, adjacent )
 
 
-expose ( ground, state ) =
-    ( ground, Cleared )
+expose ( ground, state, adjacent ) =
+    ( ground, Cleared, adjacent )
 
 
 { id, class, classList } =
