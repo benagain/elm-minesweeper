@@ -49,11 +49,6 @@ type Tile
     | Detonated
 
 
-
--- type alias Tile =
---     ( TileType, TileState )
-
-
 type alias TileList =
     List ( Tile, Int )
 
@@ -70,7 +65,7 @@ type alias Model =
 
 type Msg
     = NewGame
-    | NewBoard (List TileType)
+    | NewBoard (List Tile)
     | DoClear Int
     | DoMark Int
 
@@ -80,29 +75,29 @@ init =
     ( Model 0 [], Random.generate NewBoard (randomBoard 5) )
 
 
-randomBoard : Int -> Random.Generator (List TileType)
+randomBoard : Int -> Random.Generator (List Tile)
 randomBoard size =
     randomListGenerator size
 
 
-randomListGenerator : Int -> Random.Generator (List TileType)
+randomListGenerator : Int -> Random.Generator (List Tile)
 randomListGenerator square =
     Random.list (square ^ 2) bombFlip
 
 
-bombFlip : Random.Generator TileType
+bombFlip : Random.Generator Tile
 bombFlip =
     Random.map
         (\b ->
             if b then
-                Bomb
+                CoveredBomb
             else
-                Clear
+                CoveredClear
         )
         (Random.Extra.oneIn 4)
 
 
-toModel2 : List (TileType) -> Model
+toModel2 : List (Tile) -> Model
 toModel2 list =
     let
         indexMap =
@@ -114,9 +109,9 @@ toModel2 list =
         Model size (List.map (addBombs size list) indexMap)
 
 
-addBombs : Int -> List (TileType) -> ( Int, TileType ) -> ( Tile, Int )
+addBombs : Int -> List (Tile) -> ( Int, Tile ) -> ( Tile, Int )
 addBombs size list ( idx, tile ) =
-    ( toTile tile, countBombsForTile size list idx )
+    ( tile, countBombsForTile size list idx )
 
 
 f : (a -> b) -> (b -> c) -> a -> b -> c
@@ -129,14 +124,7 @@ intSqrt int =
     int |> toFloat >> sqrt >> round
 
 
-toTile tileType =
-    if tileType == Bomb then
-        CoveredBomb
-    else
-        CoveredClear
-
-
-countBombsForTile : Int -> List (TileType) -> Int -> Int
+countBombsForTile : Int -> List (Tile) -> Int -> Int
 countBombsForTile size list index =
     Debug.log
         ("Count bombs for " ++ toString (index))
@@ -153,9 +141,9 @@ fourDirections size index =
     Game.happho size index |> Set.toList
 
 
-isBomb : TileType -> Bool
+isBomb : Tile -> Bool
 isBomb ground =
-    ground == Bomb
+    ground == CoveredBomb || ground == MarkedBomb
 
 
 takeIndices : List Int -> List a -> List a
