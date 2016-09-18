@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Game exposing (..)
 import Html exposing (Html, button, div, text, span)
 import Html.CssHelpers
 import Html.App as App
@@ -10,6 +11,7 @@ import Random.Extra
 import Random
 import Html.Events exposing (onClick, defaultOptions)
 import HtmlExtras exposing (onRightClick)
+import Set
 
 
 --import Tile exposing (initBomb, initClear)
@@ -53,7 +55,7 @@ type Tile
 
 
 type alias TileList =
-    List Tile
+    List ( Tile, Int )
 
 
 type alias Model =
@@ -68,7 +70,7 @@ type alias Model =
 
 type Msg
     = NewGame
-    | NewBoard (List Tile)
+    | NewBoard (List TileType)
     | DoClear Int
     | DoMark Int
 
@@ -78,91 +80,104 @@ init =
     ( Model 0 [], Random.generate NewBoard (randomBoard 5) )
 
 
-randomBoard : Int -> Random.Generator (List Tile)
+randomBoard : Int -> Random.Generator (List TileType)
 randomBoard size =
     randomListGenerator size
 
 
-randomListGenerator : Int -> Random.Generator (List Tile)
+randomListGenerator : Int -> Random.Generator (List TileType)
 randomListGenerator square =
     Random.list (square ^ 2) bombFlip
 
 
-
--- |> List.foldr (::) []
--- |> flatten
-
-
-bombFlip : Random.Generator Tile
+bombFlip : Random.Generator TileType
 bombFlip =
     Random.map
         (\b ->
             if b then
-                CoveredBomb
+                Bomb
             else
-                CoveredClear
+                Clear
         )
         (Random.Extra.oneIn 4)
 
 
-
--- flatten : List (List TileType) -> List (TileType)
--- flatten list =
---     List.head list
---         |> Maybe.andThen Maybe.withDefault []
---         |> Maybe.withDefault Clear
-
-
-toModel2 : List (Tile) -> Model
+toModel2 : List (TileType) -> Model
 toModel2 list =
-    Model ((List.length list) |> toFloat >> sqrt >> round) list
+    let
+        indexMap =
+            List.indexedMap (,) list
+
+        size =
+            Debug.log "Model size" (List.length list |> intSqrt)
+    in
+        Model size (List.map (addBombs size list) indexMap)
 
 
+addBombs : Int -> List (TileType) -> ( Int, TileType ) -> ( Tile, Int )
+addBombs size list ( idx, tile ) =
+    ( toTile tile, countBombsForTile size list idx )
 
--- toModel : List (List Tile.Model) -> Dict Index Tile.Model
--- toModel tiles =
---     tiles
---         |> indexedTiles
---         |> List.foldr (++) []
---         |> Dict.fromList
---         |> countBombsForAllTiles
--- type alias XYTile =
---     ( Index, Tile.Model )
--- {-| Convert the 2D list of tiles into a 1D list of (x,y tile)
---     [ [ a, b, c ]
---     , [ d, e, f ]
---     ]
---     becomes
---     [ (0,0) a, (0, 1) b, (0, 2) c, (1, 0) d, (1, 1) e, (1, 2) f]
--- -}
--- indexedTiles : List (List Tile.Model) -> List (List XYTile)
--- indexedTiles list =
---     list
---         |> List.indexedMap
---             (\x row ->
---                 row
---                     |> List.indexedMap
---                         (\y tile -> ( ( x, y ), tile ))
---             )
--- countBombsForAllTiles : TileMap -> TileMap
--- countBombsForAllTiles tiles =
---     tiles |> Dict.map (countBombsForTile tiles)
--- countBombsForTile : TileMap -> Index -> Tile.Model -> Tile.Model
--- countBombsForTile tiles index tile =
---     tile |> Tile.addBombCount (numBombsAdjacent index tiles)
--- numBombsAdjacent : Index -> TileMap -> Int
--- numBombsAdjacent index tiles =
---     tiles
---         |> Dict.filter (onKey <| isAdjacent index)
---         |> Dict.filter (onValue Tile.isBomb)
---         |> Dict.size
--- isAdjacent : Index -> Index -> Bool
--- isAdjacent ( x, y ) ( x', y' ) =
---     (x == x' || x == x' + 1 || x == x' - 1)
---         && (y == y' || y == y' + 1 || y == y' - 1)
--- onKey : (comparable -> b) -> comparable -> a -> b
--- onKey f a _ =
---     (f a)
+
+f : (a -> b) -> (b -> c) -> a -> b -> c
+f fab fbc a b =
+    fab a |> fbc
+
+
+intSqrt : Int -> Int
+intSqrt int =
+    int |> toFloat >> sqrt >> round
+
+
+toTile tileType =
+    if tileType == Bomb then
+        CoveredBomb
+    else
+        CoveredClear
+
+
+countBombsForTile : Int -> List (TileType) -> Int -> Int
+countBombsForTile size list index =
+    Debug.log
+        ("Count bombs for " ++ toString (index))
+        (takeIndices
+            (fourDirections size index)
+            list
+            |> List.filter isBomb
+            |> List.length
+        )
+
+
+fourDirections : Int -> Int -> List Int
+fourDirections size index =
+    Game.happho size index |> Set.toList
+
+
+isBomb : TileType -> Bool
+isBomb ground =
+    ground == Bomb
+
+
+takeIndices : List Int -> List a -> List a
+takeIndices indices xs =
+    Debug.log ("indices " ++ toString (indices)) (takeIndices_ 0 indices xs)
+
+
+takeIndices_ : Int -> List Int -> List a -> List a
+takeIndices_ idx indices xs =
+    let
+        thisOne =
+            List.filter ((==) idx) indices
+    in
+        case ( thisOne, xs ) of
+            ( _, [] ) ->
+                []
+
+            ( [], head :: tail ) ->
+                takeIndices_ (idx + 1) indices tail
+
+            ( ihead :: _, head :: tail ) ->
+                head :: takeIndices_ (idx + 1) indices tail
 
 
 onValue : (a -> b) -> comparable -> a -> b
@@ -198,8 +213,13 @@ expose xy model =
     in
         { model
             | tiles =
-                replaceAt (exposeMe) xy model.tiles
+                replaceAt (onFirst exposeMe) xy model.tiles
         }
+
+
+onFirst : (a -> a) -> ( a, b ) -> ( a, b )
+onFirst fn a =
+    ( fn <| fst a, snd a )
 
 
 replaceAt : (a -> a) -> Int -> List a -> List a
@@ -268,8 +288,8 @@ view model =
 
 
 gameView : Model -> List (Html Msg)
-gameView tiles =
-    tiles.tiles |> List.indexedMap tileView
+gameView model =
+    model.tiles |> List.indexedMap (tileView model)
 
 
 
@@ -278,31 +298,31 @@ gameView tiles =
 --     (tileView xy tile) :: list
 
 
-tileView : Int -> Tile -> Html Msg
-tileView xy tile =
-    Debug.log ("view " ++ toString (xy)) tview tile <| xy
+tileView : Model -> Int -> ( Tile, Int ) -> Html Msg
+tileView model xy tile =
+    tview model tile xy
 
 
-tview : Tile -> Int -> Html Msg
-tview tile =
+tview : Model -> ( Tile, Int ) -> Int -> Html Msg
+tview model ( tile, bombCount ) xy =
     case tile of
         CoveredBomb ->
-            viewWithNoText Nothing
+            viewWithNoText Nothing xy
 
         CoveredClear ->
-            viewWithNoText Nothing
+            viewWithNoText Nothing xy
 
         MarkedBomb ->
-            viewWithNoText (Just MyCss.MarkedTile)
+            viewWithNoText (Just MyCss.MarkedTile) xy
 
         MarkedClear ->
-            viewWithNoText (Just MyCss.MarkedTile)
+            viewWithNoText (Just MyCss.MarkedTile) xy
 
         Exposed ->
-            viewWithText (Just MyCss.ClearedTile) (toString "0")
+            viewWithText (Just MyCss.ClearedTile) (toString <| bombCount)
 
         Detonated ->
-            viewWithNoText (Just MyCss.DetonatedTile)
+            viewWithNoText (Just MyCss.DetonatedTile) xy
 
 
 viewWithNoText : Maybe CssClasses -> Int -> Html Msg
@@ -310,7 +330,7 @@ viewWithNoText css xy =
     span ((cssFor css) ++ [ onClick (DoClear xy), onRightClick (DoMark xy) ]) []
 
 
-viewWithText css text _ =
+viewWithText css text =
     span (cssFor css) [ Html.text (text) ]
 
 
