@@ -6,7 +6,7 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, defaultOptions)
 import HtmlExtras exposing (onRightClick)
 import MyCss exposing (..)
-import Model exposing (..)
+import Model exposing (Model, Msg(..), Tile(..))
 
 
 view : Model -> Html Msg
@@ -20,11 +20,11 @@ view model =
 
 gameView : Model -> List (Html Msg)
 gameView model =
-    model.tiles |> (List.indexedMap (tileView model))
+    model.tiles |> List.indexedMap tileView
 
 
-tileView : Model -> Int -> ( Tile, Int ) -> Html Msg
-tileView model index ( tile, bombCount ) =
+tileView : Int -> ( Tile, Int ) -> Html Msg
+tileView index ( tile, bombCount ) =
     case tile of
         CoveredBomb ->
             viewWithNoText2 Nothing index "b"
