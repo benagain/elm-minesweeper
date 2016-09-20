@@ -3,43 +3,43 @@ module Tests exposing (..)
 import Test exposing (..)
 import Expect
 import String
-import Game exposing (..)
+import Board exposing (happo)
 import Set exposing (Set)
 
 
 all : Test
 all =
-    describe "Game happho"
+    describe "Game happo"
         [ test "top-left" <|
             \() ->
-                happho 3 4 |> setContains 0
+                happo 3 4 |> setContains 0
         , test "top-middle" <|
             \() ->
-                happho 3 4 |> setContains 1
+                happo 3 4 |> setContains 1
         , test "top-right" <|
             \() ->
-                happho 3 4 |> setContains 2
+                happo 3 4 |> setContains 2
         , test "bottom-left" <|
             \() ->
-                happho 3 4 |> setContains 6
+                happo 3 4 |> setContains 6
         , test "bottom-middle" <|
             \() ->
-                happho 3 4 |> setContains 7
+                happo 3 4 |> setContains 7
         , test "bottom-right" <|
             \() ->
-                happho 3 4 |> setContains 8
+                happo 3 4 |> setContains 8
         , test "centre" <|
             \() ->
-                happho 3 4 |> Set.toList |> Expect.equal [ 0, 1, 2, 3, 5, 6, 7, 8 ]
+                happo 3 4 |> Set.toList |> Expect.equal [ 0, 1, 2, 3, 5, 6, 7, 8 ]
         , test "off-left" <|
             \() ->
-                happho 3 3 |> Set.toList |> Expect.equal [ 0, 1, 4, 6, 7 ]
+                happo 3 3 |> Set.toList |> Expect.equal [ 0, 1, 4, 6, 7 ]
         , test "off-top" <|
             \() ->
-                happho 3 1 |> Set.toList |> Expect.equal [ 0, 2, 3, 4, 5 ]
+                happo 3 1 |> Set.toList |> Expect.equal [ 0, 2, 3, 4, 5 ]
         , test "off-right" <|
             \() ->
-                happho 3 5 |> Set.toList |> Expect.equal [ 0, 2, 3, 4, 5 ]
+                happo 3 5 |> Set.toList |> Expect.equal [ 0, 2, 3, 4, 5 ]
         ]
 
 

@@ -1,16 +1,17 @@
 module Update exposing (update)
 
 import Model exposing (..)
+import Board
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewGame ->
-            ( model, Model.generateCommand )
+            ( model, Board.generate )
 
         NewBoard board ->
-            ( toModel board, Cmd.none )
+            ( Board.toModel board, Cmd.none )
 
         DoClear xy ->
             ( expose xy model, Cmd.none )
@@ -26,7 +27,7 @@ expose index model =
             model.tiles
                 |> List.drop index
                 |> List.head
-                |> Maybe.map (fst >> isBomb)
+                |> Maybe.map (fst >> Board.isBomb)
                 |> Maybe.withDefault False
 
         updateTiles =
