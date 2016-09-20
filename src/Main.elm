@@ -246,34 +246,29 @@ view model =
 
 gameView : Model -> List (Html Msg)
 gameView model =
-    model.tiles |> List.indexedMap (tileView model)
+    model.tiles |> (List.indexedMap (tileView model))
 
 
 tileView : Model -> Int -> ( Tile, Int ) -> Html Msg
-tileView model xy tile =
-    tview model tile xy
-
-
-tview : Model -> ( Tile, Int ) -> Int -> Html Msg
-tview model ( tile, bombCount ) xy =
+tileView model index ( tile, bombCount ) =
     case tile of
         CoveredBomb ->
-            viewWithNoText2 Nothing xy "b"
+            viewWithNoText2 Nothing index "b"
 
         CoveredClear ->
-            viewWithNoText Nothing xy
+            viewWithNoText Nothing index
 
         MarkedBomb ->
-            viewWithNoText (Just MyCss.MarkedTile) xy
+            viewWithNoText (Just MyCss.MarkedTile) index
 
         MarkedClear ->
-            viewWithNoText (Just MyCss.MarkedTile) xy
+            viewWithNoText (Just MyCss.MarkedTile) index
 
         ExposedClear ->
             viewWithText (Just MyCss.ClearedTile) (toString <| bombCount)
 
         ExposedBomb ->
-            viewWithNoText (Just MyCss.DetonatedTile) xy
+            viewWithNoText (Just MyCss.DetonatedTile) index
 
         Detonated ->
             viewWithText (Just MyCss.DetonatedTile) "!"
@@ -289,10 +284,12 @@ viewWithNoText2 css xy text =
     span ((cssFor css) ++ [ onClick (DoClear xy), onRightClick (DoMark xy) ]) [ Html.text (text) ]
 
 
+viewWithText : Maybe a -> String -> Html b
 viewWithText css text =
     span (cssFor css) [ Html.text (text) ]
 
 
+cssFor : Maybe a -> List (Html.Attribute b)
 cssFor css =
     mapWithDefault (\css -> [ class [ css ] ]) [] css
 
