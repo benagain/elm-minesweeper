@@ -14,9 +14,6 @@ import HtmlExtras exposing (onRightClick)
 import Set
 
 
---import Tile exposing (initBomb, initClear)
-
-
 main : Program Never
 main =
     App.program
@@ -31,21 +28,13 @@ main =
 -- MODEL
 
 
-type alias Index =
-    ( Int, Int )
-
-
-type TileType
-    = Bomb
-    | Clear
-
-
 type Tile
     = CoveredBomb
-    | MarkedBomb
     | CoveredClear
+    | MarkedBomb
     | MarkedClear
-    | Exposed
+    | ExposedClear
+      -- only shown when the game is lost
     | ExposedBomb
     | Detonated
 
@@ -78,12 +67,7 @@ init =
 
 randomBoard : Int -> Random.Generator (List Tile)
 randomBoard size =
-    randomListGenerator size
-
-
-randomListGenerator : Int -> Random.Generator (List Tile)
-randomListGenerator square =
-    Random.list (square ^ 2) bombFlip
+    Random.list (size ^ 2) bombFlip
 
 
 bombFlip : Random.Generator Tile
@@ -98,8 +82,8 @@ bombFlip =
         (Random.Extra.oneIn 4)
 
 
-toModel2 : List (Tile) -> Model
-toModel2 list =
+toModel : List (Tile) -> Model
+toModel list =
     let
         indexMap =
             List.indexedMap (,) list
@@ -110,19 +94,14 @@ toModel2 list =
         Model size (List.map (addBombs size list) indexMap)
 
 
-addBombs : Int -> List (Tile) -> ( Int, Tile ) -> ( Tile, Int )
-addBombs size list ( idx, tile ) =
-    ( tile, countBombsForTile size list idx )
-
-
-f : (a -> b) -> (b -> c) -> a -> b -> c
-f fab fbc a b =
-    fab a |> fbc
-
-
 intSqrt : Int -> Int
 intSqrt int =
     int |> toFloat >> sqrt >> round
+
+
+addBombs : Int -> List (Tile) -> ( Int, Tile ) -> ( Tile, Int )
+addBombs size list ( idx, tile ) =
+    ( tile, countBombsForTile size list idx )
 
 
 countBombsForTile : Int -> List (Tile) -> Int -> Int
@@ -169,11 +148,6 @@ takeIndices_ idx indices xs =
                 head :: takeIndices_ (idx + 1) indices tail
 
 
-onValue : (a -> b) -> comparable -> a -> b
-onValue f _ b =
-    (f b)
-
-
 
 -- UPDATE
 
@@ -185,7 +159,7 @@ update msg model =
             ( model, Random.generate NewBoard (randomBoard 5) )
 
         NewBoard board ->
-            ( toModel2 board, Cmd.none )
+            ( toModel board, Cmd.none )
 
         DoClear xy ->
             ( expose xy model, Cmd.none )
@@ -197,18 +171,12 @@ update msg model =
 expose : Int -> Model -> Model
 expose xy model =
     let
-        d =
-            Debug.log "expose " xy
-
-        tile =
-            List.drop xy model.tiles |> List.head
-
         detonated =
-            Debug.log "detonated? "
-                (tile
-                    |> Maybe.map (fst >> isBomb)
-                    |> Maybe.withDefault False
-                )
+            model.tiles
+                |> List.drop xy
+                |> List.head
+                |> Maybe.map (fst >> isBomb)
+                |> Maybe.withDefault False
     in
         case detonated of
             True ->
@@ -242,55 +210,25 @@ replaceAt fn idx list =
 
 exposeMe : Tile -> Tile
 exposeMe tile =
-    Debug.log ("exposeMe " ++ toString (tile) ++ " -> ")
-        (case tile of
-            CoveredBomb ->
-                Detonated
+    case tile of
+        CoveredBomb ->
+            Detonated
 
-            other ->
-                exposeTile other
-        )
+        other ->
+            exposeTile other
 
 
 exposeTile : Tile -> Tile
 exposeTile tile =
-    Debug.log ("exposeTile " ++ toString (tile) ++ " -> ")
-        (case (tile) of
-            CoveredBomb ->
-                ExposedBomb
+    case (tile) of
+        CoveredBomb ->
+            ExposedBomb
 
-            CoveredClear ->
-                Exposed
+        CoveredClear ->
+            ExposedClear
 
-            other ->
-                other
-        )
-
-
-updateTiles : Index -> Model -> Model
-updateTiles xy tiles =
-    let
-        index =
-            0
-
-        -- updated =
-        --     Dict.update xy (Maybe.map (Tile.update msg)) tiles
-        -- boom =
-        --     Dict.get xy updated
-        --         |> Maybe.map Tile.didDetonate
-        --         |> maybeChoice identity (Dict.map (onValue Tile.expose))
-    in
-        tiles
-
-
-maybeChoice : (a -> b) -> (a -> b) -> Maybe Bool -> a -> b
-maybeChoice t f m =
-    case m of
-        Just True ->
-            t
-
-        _ ->
-            f
+        other ->
+            other
 
 
 
@@ -309,12 +247,6 @@ view model =
 gameView : Model -> List (Html Msg)
 gameView model =
     model.tiles |> List.indexedMap (tileView model)
-
-
-
--- tileViewList : Index -> Tile.Model -> List (Html Msg) -> List (Html Msg)
--- tileViewList xy tile list =
---     (tileView xy tile) :: list
 
 
 tileView : Model -> Int -> ( Tile, Int ) -> Html Msg
@@ -337,7 +269,7 @@ tview model ( tile, bombCount ) xy =
         MarkedClear ->
             viewWithNoText (Just MyCss.MarkedTile) xy
 
-        Exposed ->
+        ExposedClear ->
             viewWithText (Just MyCss.ClearedTile) (toString <| bombCount)
 
         ExposedBomb ->
