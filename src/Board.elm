@@ -35,7 +35,7 @@ toModel list =
             List.indexedMap (,) list
 
         size =
-            Debug.log "Model size" (List.length list |> intSqrt)
+            List.length list |> intSqrt
     in
         Model size (List.map (addBombs size list) indexMap)
 
@@ -52,14 +52,11 @@ addBombs size list ( idx, tile ) =
 
 countBombsForTile : Int -> List (Tile) -> Int -> Int
 countBombsForTile size list index =
-    Debug.log
-        ("Count bombs for " ++ toString (index))
-        (takeIndices
-            (fourDirections size index)
-            list
-            |> List.filter isBomb
-            |> List.length
-        )
+    takeIndices
+        (fourDirections size index)
+        list
+        |> List.filter isBomb
+        |> List.length
 
 
 fourDirections : Int -> Int -> List Int
@@ -80,15 +77,6 @@ happo size index =
 
         indexOfRow =
             row * size
-
-        -- indexOfPreviousRow =
-        --     indexOfRow - size
-        -- indexOfNextRow =
-        --     indexOfRow + size
-        -- indexInRow =
-        --     index - indexOfRow
-        d =
-            Debug.log ("row " ++ toString (row) ++ ", indexOfRow " ++ toString (indexOfRow) ++ ", index ") index
     in
         Set.fromList
             [ -- nw
@@ -114,7 +102,7 @@ happo size index =
 
 takeIndices : List Int -> List a -> List a
 takeIndices indices xs =
-    Debug.log ("indices " ++ toString (indices)) (takeIndices_ 0 indices xs)
+    takeIndices_ 0 indices xs
 
 
 takeIndices_ : Int -> List Int -> List a -> List a
