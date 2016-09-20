@@ -46,6 +46,7 @@ type Tile
     | CoveredClear
     | MarkedClear
     | Exposed
+    | ExposedBomb
     | Detonated
 
 
@@ -197,12 +198,28 @@ expose : Int -> Model -> Model
 expose xy model =
     let
         d =
-            Debug.log ("expose " ++ toString (xy) ++ " in ") (List.length model.tiles)
+            Debug.log "expose " xy
+
+        tile =
+            List.drop xy model.tiles |> List.head
+
+        detonated =
+            Debug.log "detonated? "
+                (tile
+                    |> Maybe.map (fst >> isBomb)
+                    |> Maybe.withDefault False
+                )
     in
-        { model
-            | tiles =
-                replaceAt (onFirst exposeMe) xy model.tiles
-        }
+        case detonated of
+            True ->
+                { model
+                    | tiles =
+                        replaceAt (onFirst exposeMe) xy model.tiles
+                            |> List.map (onFirst exposeTile)
+                }
+
+            False ->
+                { model | tiles = replaceAt (onFirst exposeMe) xy model.tiles }
 
 
 onFirst : (a -> a) -> ( a, b ) -> ( a, b )
@@ -225,15 +242,29 @@ replaceAt fn idx list =
 
 exposeMe : Tile -> Tile
 exposeMe tile =
-    case (tile) of
-        CoveredBomb ->
-            Debug.log (toString (tile) ++ " -> ") Detonated
+    Debug.log ("exposeMe " ++ toString (tile) ++ " -> ")
+        (case tile of
+            CoveredBomb ->
+                Detonated
 
-        CoveredClear ->
-            Debug.log (toString (tile) ++ " -> ") Exposed
+            other ->
+                exposeTile other
+        )
 
-        other ->
-            Debug.log (toString (tile) ++ " -> ") other
+
+exposeTile : Tile -> Tile
+exposeTile tile =
+    Debug.log ("exposeTile " ++ toString (tile) ++ " -> ")
+        (case (tile) of
+            CoveredBomb ->
+                ExposedBomb
+
+            CoveredClear ->
+                Exposed
+
+            other ->
+                other
+        )
 
 
 updateTiles : Index -> Model -> Model
@@ -295,7 +326,7 @@ tview : Model -> ( Tile, Int ) -> Int -> Html Msg
 tview model ( tile, bombCount ) xy =
     case tile of
         CoveredBomb ->
-            viewWithNoText Nothing xy
+            viewWithNoText2 Nothing xy "b"
 
         CoveredClear ->
             viewWithNoText Nothing xy
@@ -309,13 +340,21 @@ tview model ( tile, bombCount ) xy =
         Exposed ->
             viewWithText (Just MyCss.ClearedTile) (toString <| bombCount)
 
-        Detonated ->
+        ExposedBomb ->
             viewWithNoText (Just MyCss.DetonatedTile) xy
+
+        Detonated ->
+            viewWithText (Just MyCss.DetonatedTile) "!"
 
 
 viewWithNoText : Maybe CssClasses -> Int -> Html Msg
 viewWithNoText css xy =
     span ((cssFor css) ++ [ onClick (DoClear xy), onRightClick (DoMark xy) ]) []
+
+
+viewWithNoText2 : Maybe CssClasses -> Int -> String -> Html Msg
+viewWithNoText2 css xy text =
+    span ((cssFor css) ++ [ onClick (DoClear xy), onRightClick (DoMark xy) ]) [ Html.text (text) ]
 
 
 viewWithText css text =
