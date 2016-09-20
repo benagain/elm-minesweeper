@@ -26,13 +26,16 @@ css =
             [ (backgroundColor (hex "ffffff")) |> important ]
         , (.) MarkedTile
             [ (backgroundColor (hex "ffff00")) |> important ]
+        , (.) None []
         ]
 
 
 type CssClasses
     = Board
+    | None
     | ClearedTile
     | MarkedTile
+    | ExposedBombTile
     | DetonatedTile
 
 

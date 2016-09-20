@@ -5,14 +5,14 @@ import Html.CssHelpers
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, defaultOptions)
 import HtmlExtras exposing (onRightClick)
-import MyCss exposing (..)
+import MyCss as Css exposing (CssClasses)
 import Model exposing (Model, Msg(..), Tile(..))
 
 
 view : Model -> Html Msg
 view model =
     div
-        [ class [ MyCss.Board ]
+        [ class [ Css.Board ]
         , style [ ( "width", toString (toFloat (model.square) * 2.4) ++ "em" ) ]
         ]
         (gameView model)
@@ -27,55 +27,42 @@ tileView : Int -> ( Tile, Int ) -> Html Msg
 tileView index ( tile, bombCount ) =
     case tile of
         CoveredBomb ->
-            viewWithNoText2 Nothing index "b"
+            clickable Css.None index
 
         CoveredClear ->
-            viewWithNoText Nothing index
+            clickable Css.None index
 
         MarkedBomb ->
-            viewWithNoText (Just MyCss.MarkedTile) index
+            clickable Css.MarkedTile index
 
         MarkedClear ->
-            viewWithNoText (Just MyCss.MarkedTile) index
+            clickable Css.MarkedTile index
 
         ExposedClear ->
-            viewWithText (Just MyCss.ClearedTile) (toString <| bombCount)
+            inert Css.ClearedTile (toString <| bombCount)
 
         ExposedBomb ->
-            viewWithNoText (Just MyCss.DetonatedTile) index
+            inert Css.ExposedBombTile ""
 
         Detonated ->
-            viewWithText (Just MyCss.DetonatedTile) "!"
+            inert Css.DetonatedTile "!"
 
 
-viewWithNoText : Maybe CssClasses -> Int -> Html Msg
-viewWithNoText css xy =
-    span ((cssFor css) ++ [ onClick (DoClear xy), onRightClick (DoMark xy) ]) []
+clickable : CssClasses -> Int -> Html Msg
+clickable css index =
+    span
+        [ class [ css ]
+        , onClick (DoClear index)
+        , onRightClick (DoMark index)
+        ]
+        []
 
 
-viewWithNoText2 : Maybe CssClasses -> Int -> String -> Html Msg
-viewWithNoText2 css xy text =
-    span ((cssFor css) ++ [ onClick (DoClear xy), onRightClick (DoMark xy) ]) [ Html.text (text) ]
-
-
-viewWithText : Maybe a -> String -> Html b
-viewWithText css text =
-    span (cssFor css) [ Html.text (text) ]
-
-
-cssFor : Maybe a -> List (Html.Attribute b)
-cssFor css =
-    mapWithDefault (\css -> [ class [ css ] ]) [] css
-
-
-mapWithDefault : (a -> b) -> b -> Maybe a -> b
-mapWithDefault fn b a =
-    case a of
-        Nothing ->
-            b
-
-        Just a ->
-            fn a
+inert : CssClasses -> String -> Html b
+inert css text =
+    span
+        [ class [ css ] ]
+        [ Html.text (text) ]
 
 
 { id, class, classList } =
