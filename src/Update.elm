@@ -20,25 +20,26 @@ update msg model =
 
 
 expose : Int -> Model -> Model
-expose xy model =
+expose index model =
     let
         detonated =
             model.tiles
-                |> List.drop xy
+                |> List.drop index
                 |> List.head
                 |> Maybe.map (fst >> isBomb)
                 |> Maybe.withDefault False
-    in
-        case detonated of
-            True ->
-                { model
-                    | tiles =
-                        replaceAt (onFirst exposeMe) xy model.tiles
-                            |> List.map (onFirst exposeTile)
-                }
 
-            False ->
-                { model | tiles = replaceAt (onFirst exposeMe) xy model.tiles }
+        updateTiles =
+            model.tiles
+                |> replaceAt (onFirst exposeMe) index
+                |> if detonated then
+                    List.map (onFirst exposeTile)
+                   else
+                    identity
+    in
+        { model
+            | tiles = updateTiles
+        }
 
 
 onFirst : (a -> a) -> ( a, b ) -> ( a, b )
