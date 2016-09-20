@@ -1,6 +1,3 @@
-.dreamwriterBoard {
-}
-
 .dreamwriterBoard > span {
     background-color: #789048;
     width: 2em;
@@ -26,6 +23,10 @@
     background-size: 50%;
     background-repeat: no-repeat;
     background-position: 50%;
+}
+
+.dreamwriterExposedBombTile  {
+    background-color: red !important;
 }
 
 .dreamwriterDetonatedTile  {
