@@ -1,4 +1,4 @@
-module Board exposing (generate, toModel, isBomb)
+module Board exposing (generate, toModel, isBomb, happo)
 
 import Set exposing (..)
 import Random.Extra
