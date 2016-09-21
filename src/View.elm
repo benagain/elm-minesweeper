@@ -4,7 +4,7 @@ import Html exposing (Html, button, div, text, span)
 import Html.CssHelpers
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, defaultOptions)
-import HtmlExtras exposing (onRightClick)
+import Html.Extras exposing (onRightClick)
 import MyCss as Css exposing (CssClasses)
 import Model exposing (Model, Msg(..), Tile(..))
 

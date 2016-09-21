@@ -1,4 +1,4 @@
-module HtmlExtras exposing (onRightClick)
+module Html.Extras exposing (onRightClick)
 
 import Html exposing (Html)
 import Html.Attributes
