@@ -2,6 +2,7 @@ module Update exposing (update)
 
 import Model exposing (..)
 import Board
+import List.Extra
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -23,10 +24,11 @@ update msg model =
 expose : Int -> Model -> Model
 expose index model =
     let
+        tile =
+            model.tiles |> List.Extra.getAt index
+
         detonated =
-            model.tiles
-                |> List.drop index
-                |> List.head
+            tile
                 |> Maybe.map (fst >> Board.isBomb)
                 |> Maybe.withDefault False
 
