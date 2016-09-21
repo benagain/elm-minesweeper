@@ -3,6 +3,7 @@ module Update exposing (update)
 import Model exposing (..)
 import Board
 import List.Extra
+import List.Extras exposing (updateAt')
 import Tuple2 exposing (mapFst)
 
 
@@ -35,7 +36,7 @@ expose index model =
 
         updateTiles =
             model.tiles
-                |> replaceAt (mapFst exposeMe) index
+                |> updateAt' index (mapFst exposeMe)
                 |> if detonated then
                     List.map (mapFst exposeTile)
                    else
@@ -44,19 +45,6 @@ expose index model =
         { model
             | tiles = updateTiles
         }
-
-
-replaceAt : (a -> a) -> Int -> List a -> List a
-replaceAt fn idx list =
-    case ( list, idx ) of
-        ( [], _ ) ->
-            []
-
-        ( head :: tail, 0 ) ->
-            fn head :: tail
-
-        ( head :: tail, i ) ->
-            head :: replaceAt fn (i - 1) tail
 
 
 exposeMe : Tile -> Tile
