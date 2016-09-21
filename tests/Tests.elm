@@ -39,7 +39,7 @@ all =
                 happo 3 1 |> Set.toList |> Expect.equal [ 0, 2, 3, 4, 5 ]
         , test "off-right" <|
             \() ->
-                happo 3 5 |> Set.toList |> Expect.equal [ 0, 2, 3, 4, 5 ]
+                happo 3 5 |> Set.toList |> Expect.equal [ 1, 2, 4, 7, 8 ]
         ]
 
 
