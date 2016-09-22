@@ -4,6 +4,7 @@ import Set exposing (..)
 import Random.Extra
 import Random
 import Model exposing (..)
+import List.Extras exposing (takeIndices)
 
 
 generate : Cmd Msg
@@ -98,28 +99,6 @@ happo size index =
             ]
             |> Set.remove index
             |> Set.filter ((<=) 0)
-
-
-takeIndices : List Int -> List a -> List a
-takeIndices indices xs =
-    takeIndices_ 0 indices xs
-
-
-takeIndices_ : Int -> List Int -> List a -> List a
-takeIndices_ idx indices xs =
-    let
-        thisOne =
-            List.filter ((==) idx) indices
-    in
-        case ( thisOne, xs ) of
-            ( _, [] ) ->
-                []
-
-            ( [], head :: tail ) ->
-                takeIndices_ (idx + 1) indices tail
-
-            ( ihead :: _, head :: tail ) ->
-                head :: takeIndices_ (idx + 1) indices tail
 
 
 isBomb : Tile -> Bool
