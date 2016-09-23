@@ -20,8 +20,34 @@ update msg model =
         DoClear xy ->
             ( expose xy model, Cmd.none )
 
+        DoMark xy ->
+            ( mark xy model, Cmd.none )
+
+
+mark : Int -> Model -> Model
+mark index model =
+    { model
+        | tiles = model.tiles |> updateAt' index (mapFst markMe)
+    }
+
+
+markMe : Tile -> Tile
+markMe tile =
+    case tile of
+        MarkedBomb ->
+            CoveredBomb
+
+        MarkedClear ->
+            CoveredClear
+
+        CoveredBomb ->
+            MarkedBomb
+
+        CoveredClear ->
+            MarkedClear
+
         _ ->
-            Debug.crash "TODO"
+            tile
 
 
 expose : Int -> Model -> Model
