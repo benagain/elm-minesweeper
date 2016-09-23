@@ -5,11 +5,13 @@ import Expect
 import String
 import Board
 import Set exposing (Set)
+import Model exposing (Tile(..))
+import Update
 
 
 all : Test
 all =
-    describe "board" [ happo ]
+    describe "board" [ happo, clearPath ]
 
 
 happo : Test
@@ -66,3 +68,83 @@ listContains expected actual =
         ]
             |> String.join "\n"
             |> Expect.fail
+
+
+sampleBoard =
+    Board.toModel
+        [ CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredBomb
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredBomb
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredBomb
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredClear
+        , CoveredBomb
+        ]
+
+
+debugSampleBoard =
+    Debug.log "sampleBoard" (sampleBoard.tiles |> List.map snd)
+
+
+
+-- [
+--   0,0,0,1,1,1,0,
+--   0,0,0,1,x,1,0,
+--   0,1,1,2,1,1,0,
+--   1,2,x,1,0,0,0,
+--   x,2,1,1,0,0,0,
+--   1,1,0,0,0,1,1,
+--   0,0,0,0,0,1,x
+-- ]
+
+
+clearPath =
+    describe "clearPath"
+        [ test "not zero returns self" <|
+            \() ->
+                Update.clearPath sampleBoard.square [ 0 ] sampleBoard.tiles []
+                    |> List.sort
+                    |> Expect.equal [ 0, 1, 2, 7, 8, 9, 14 ]
+        ]
