@@ -88,7 +88,7 @@ exposeTiles boardSize index tiles =
                     (Board.fourDirections boardSize index)
 
                 toClear =
-                    (clearPath boardSize happo tiles [])
+                    (clearPath boardSize index tiles)
             in
                 List.Extras.mapIndices (mapFst exposeTile) toClear tiles
 
@@ -96,56 +96,99 @@ exposeTiles boardSize index tiles =
             tiles
 
 
-clearPath : Int -> List Int -> TileList -> List Int -> List Int
-clearPath boardSize happo tiles soFar =
+clearPath : Int -> Int -> TileList -> List Int
+clearPath boardSize index tiles =
+    if hasNeighouringBombs index tiles then
+        clearPath' boardSize [ index ] tiles [] []
+    else
+        []
+
+
+hasNeighouringBombs : Int -> TileList -> Bool
+hasNeighouringBombs index tiles =
+    tiles
+        |> List.Extra.getAt index
+        |> Maybe.map (snd >> ((==) 0))
+        |> Maybe.withDefault False
+
+
+clearPath' : Int -> List Int -> TileList -> List Int -> List Int -> List Int
+clearPath' boardSize maybeZero tiles soFar alreadyProcessed =
     let
         d =
-            Debug.log "clearPath" (toString (happo) ++ " (" ++ toString (soFar) ++ ")")
+            Debug.log "clearPath" (toString (maybeZero) ++ " (" ++ toString (soFar) ++ ")")
     in
-        case happo of
+        case maybeZero of
             [] ->
                 []
 
             head :: tail ->
                 let
-                    bomb =
-                        (tiles
-                            |> List.Extra.getAt head
-                            |> Maybe.map (snd >> ((==) 0))
-                            |> Maybe.withDefault False
-                        )
+                    happo =
+                        Debug.log "happo"
+                            (Board.fourDirections boardSize head
+                             -- |> List.filter ((==) 0)
+                            )
+
+                    isZero =
+                        hasNeighouringBombs head tiles
 
                     set =
                         Set.fromList tail
 
                     surrounding =
-                        (Board.fourDirections boardSize head)
+                        (happo)
                             |> Set.fromList
                             |> Set.union set
                             |> (flip Set.diff (Set.fromList soFar))
                             |> Set.toList
+
+                    xsf =
+                        Debug.log "surroundingi" (List.Extras.takeIndices surrounding tiles)
+
+                    toTest =
+                        Debug.log "sofar"
+                            ((happo)
+                                |> Set.fromList
+                                |> Set.union set
+                                |> (flip Set.diff (Set.fromList alreadyProcessed))
+                                |> Set.toList
+                            )
+
+                    -- yab = Debug.log "surrounding2" (List.Extras.indexedFilter
                 in
                     Debug.log "clearPath ->"
-                        (if bomb then
+                        (if isZero then
                             let
                                 dd =
                                     Debug.log "clearPath..." ("new 0 " ++ toString (surrounding))
                             in
                                 head
-                                    :: (clearPath boardSize
-                                            surrounding
+                                    :: (clearPath' boardSize
+                                            toTest
                                             tiles
-                                            (head :: soFar)
+                                            (surrounding)
+                                            (head :: alreadyProcessed)
                                        )
                          else
                             let
                                 dd =
-                                    Debug.log "clearPath..."
-                                        (if bomb then
-                                            "bomb already"
-                                         else
-                                            "clear"
-                                        )
+                                    Debug.log "clearPath..." "nonZero"
                             in
-                                clearPath boardSize tail tiles soFar
+                                head :: (clearPath' boardSize tail tiles soFar (head :: alreadyProcessed))
                         )
+
+
+
+-- (let
+--     dd =
+--         Debug.log "clearPath..." ("new 0 " ++ toString (surrounding))
+--  in
+--     head
+--         :: (clearPath' boardSize
+--                 surrounding
+--                 []
+--                 tiles
+--                 (head :: soFar)
+--            )
+-- )

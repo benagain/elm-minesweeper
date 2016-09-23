@@ -27,10 +27,10 @@ tileView : Int -> ( Tile, Int ) -> Html Msg
 tileView index ( tile, bombCount ) =
     case tile of
         CoveredBomb ->
-            clickable Css.None index
+            clickableVisible Css.None index (toString bombCount)
 
         CoveredClear ->
-            clickable Css.None index
+            clickableVisible Css.None index (toString bombCount)
 
         MarkedBomb ->
             clickable Css.MarkedTile index
@@ -56,6 +56,16 @@ clickable css index =
         , onRightClick (DoMark index)
         ]
         []
+
+
+clickableVisible : CssClasses -> Int -> String -> Html Msg
+clickableVisible css index text =
+    span
+        [ class [ css ]
+        , onClick (DoClear index)
+        , onRightClick (DoMark index)
+        ]
+        [ Html.text (text) ]
 
 
 inert : CssClasses -> String -> Html b
