@@ -108,9 +108,6 @@ clearPath boardSize happo tiles soFar =
 
             head :: tail ->
                 let
-                    notContained =
-                        (doesNotContain head soFar)
-
                     bomb =
                         (tiles
                             |> List.Extra.getAt head
@@ -127,17 +124,12 @@ clearPath boardSize happo tiles soFar =
                             |> Set.union set
                             |> (flip Set.diff (Set.fromList soFar))
                             |> Set.toList
-
-                    x =
-                        Debug.log
-                            ("clearPath " ++ toString (head))
-                            ("bomb: " ++ toString (bomb) ++ ", needed: " ++ toString (notContained))
                 in
                     Debug.log "clearPath ->"
-                        (if bomb && doesNotContain head soFar then
+                        (if bomb then
                             let
                                 dd =
-                                    Debug.log "clearPath also" surrounding
+                                    Debug.log "clearPath..." ("new 0 " ++ toString (surrounding))
                             in
                                 head
                                     :: (clearPath boardSize
@@ -145,12 +137,15 @@ clearPath boardSize happo tiles soFar =
                                             tiles
                                             (head :: soFar)
                                        )
-                            -- ++ clearPath boardSize tail tiles (head :: soFar)
                          else
-                            clearPath boardSize tail tiles soFar
+                            let
+                                dd =
+                                    Debug.log "clearPath..."
+                                        (if bomb then
+                                            "bomb already"
+                                         else
+                                            "clear"
+                                        )
+                            in
+                                clearPath boardSize tail tiles soFar
                         )
-
-
-doesNotContain : a -> List a -> Bool
-doesNotContain item list =
-    list |> List.filter ((==) item) |> List.isEmpty

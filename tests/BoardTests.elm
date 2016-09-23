@@ -142,9 +142,19 @@ debugSampleBoard =
 
 clearPath =
     describe "clearPath"
-        [ test "not zero returns self" <|
+        [ test "with path" <|
             \() ->
                 Update.clearPath sampleBoard.square [ 0 ] sampleBoard.tiles []
                     |> List.sort
                     |> Expect.equal [ 0, 1, 2, 7, 8, 9, 14 ]
+        , test "initial not zero returns empty" <|
+            \() ->
+                Update.clearPath sampleBoard.square [ 3 ] sampleBoard.tiles []
+                    |> List.sort
+                    |> Expect.equal []
+        , test "path 2" <|
+            \() ->
+                Update.clearPath sampleBoard.square [ 32 ] sampleBoard.tiles []
+                    |> List.sort
+                    |> Expect.equal [ 6, 13, 20, 25, 26, 27, 32, 33, 34, 37, 38, 39, 42, 43, 44, 45, 46 ]
         ]
