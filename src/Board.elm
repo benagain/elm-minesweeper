@@ -99,7 +99,7 @@ happo size index =
             ]
             |> Set.remove index
             |> Set.filter ((<=) 0)
-            |> Set.filter ((>=) (size * size))
+            |> Set.filter ((>=) ((size * size) - 1))
 
 
 isBomb : Tile -> Bool
