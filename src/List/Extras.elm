@@ -49,3 +49,28 @@ takeIndices' index indices xs =
                 head :: takeIndices' (index + 1) otherIndices tail
             else
                 takeIndices' (index + 1) indices tail
+
+
+mapIndices : (a -> a) -> List Int -> List a -> List a
+mapIndices fn indices xs =
+    mapIndices_ fn 0 indices xs
+
+
+mapIndices_ : (a -> a) -> Int -> List Int -> List a -> List a
+mapIndices_ fn index indices xs =
+    let
+        thisOne =
+            List.filter ((==) index) indices |> List.length
+
+        apply =
+            if thisOne > 0 then
+                fn
+            else
+                identity
+    in
+        case xs of
+            [] ->
+                []
+
+            head :: tail ->
+                (apply head) :: mapIndices_ fn (index + 1) indices tail

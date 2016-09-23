@@ -3,7 +3,7 @@ module Update exposing (update)
 import Model exposing (..)
 import Board
 import List.Extra
-import List.Extras exposing (updateAt')
+import List.Extras exposing (updateAt', mapIndices)
 import Tuple2 exposing (mapFst)
 
 
@@ -34,11 +34,18 @@ expose index model =
                 |> Maybe.map (fst >> Board.isBomb)
                 |> Maybe.withDefault False
 
+        bombCount =
+            tile
+                |> Maybe.map snd
+                |> Maybe.withDefault 0
+
         updateTiles =
             model.tiles
                 |> updateAt' index (mapFst exposeMe)
                 |> if detonated then
                     List.map (mapFst exposeTile)
+                   else if bombCount == 0 then
+                    List.Extras.mapIndices (mapFst exposeTile) (Board.fourDirections model.square index)
                    else
                     identity
     in

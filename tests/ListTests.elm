@@ -11,6 +11,7 @@ all =
     describe "List.Extras"
         [ indexedFilter
         , takeIndices
+        , mapIndices
         ]
 
 
@@ -78,4 +79,30 @@ takeIndices =
                 [ 1, 2, 3, 4, 5, 6 ]
                     |> List.Extras.takeIndices [ 1, 4 ]
                     |> Expect.equal [ 2, 5 ]
+        ]
+
+
+mapIndices : Test
+mapIndices =
+    describe "List.Extra.mapIndices"
+        [ test "no indices returns original list" <|
+            \() ->
+                [ 1, 2, 3, 4 ]
+                    |> List.Extras.mapIndices (always 0) []
+                    |> Expect.equal [ 1, 2, 3, 4 ]
+        , test "all indices returns all map" <|
+            \() ->
+                [ 1, 2, 3, 4 ]
+                    |> List.Extras.mapIndices (always 0) [ 0, 1, 2, 3 ]
+                    |> Expect.equal [ 0, 0, 0, 0 ]
+        , test "inner indices returns mapped inners" <|
+            \() ->
+                [ 1, 2, 3, 4 ]
+                    |> List.Extras.mapIndices (always 0) [ 1, 2 ]
+                    |> Expect.equal [ 1, 0, 0, 4 ]
+        , test "outer indices returns mapped outers" <|
+            \() ->
+                [ 1, 2, 3, 4 ]
+                    |> List.Extras.mapIndices (always 0) [ 0, 3 ]
+                    |> Expect.equal [ 0, 2, 3, 0 ]
         ]
