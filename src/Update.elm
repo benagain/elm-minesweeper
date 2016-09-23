@@ -104,7 +104,7 @@ clearPath' boardSize maybeZero tiles alreadyProcessed =
                 toTest =
                     if tileIsZero then
                         head
-                            |> Board.fourDirections boardSize
+                            |> Board.surroundingSquare boardSize
                             |> Set.fromList
                             |> Set.union (Set.fromList tail)
                             |> (flip Set.diff (Set.fromList alreadyProcessed))

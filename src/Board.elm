@@ -1,4 +1,4 @@
-module Board exposing (generate, toModel, isBomb, happo, fourDirections)
+module Board exposing (generate, toModel, isBomb, happo, surroundingSquare)
 
 import Set exposing (..)
 import Random.Extra
@@ -54,14 +54,14 @@ addBombs size list ( idx, tile ) =
 countBombsForTile : Int -> List (Tile) -> Int -> Int
 countBombsForTile size list index =
     takeIndices
-        (fourDirections size index)
+        (surroundingSquare size index)
         list
         |> List.filter isBomb
         |> List.length
 
 
-fourDirections : Int -> Int -> List Int
-fourDirections size index =
+surroundingSquare : Int -> Int -> List Int
+surroundingSquare size index =
     happo size index |> Set.toList
 
 
