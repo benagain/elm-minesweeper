@@ -39,7 +39,7 @@ expose index model =
                 List.map (mapFst exposeTile)
             else
                 -- Expose neighours of neighbours that don't have bombs
-                List.Extras.mapIndices (mapFst exposeTile) (clearPath model.square index model.tiles)
+                List.Extras.mapIndices (mapFst exposeTile) (clearPath index model)
     in
         { model
             | tiles =
@@ -72,10 +72,10 @@ exposeTile tile =
             other
 
 
-clearPath : Int -> Int -> TileList -> List Int
-clearPath boardSize index tiles =
-    if hasNeighouringBombs index tiles then
-        clearPath' boardSize [ index ] tiles []
+clearPath : Int -> Model -> List Int
+clearPath index tiles =
+    if hasNeighouringBombs index tiles.tiles then
+        clearPath' [ index ] tiles []
     else
         []
 
@@ -90,8 +90,8 @@ hasNeighouringBombs index tiles =
 
 {-| Determine all tiles that have don't neighouring bombs and their immediate surrounding tiles that do
 -}
-clearPath' : Int -> List Int -> TileList -> List Int -> List Int
-clearPath' boardSize maybeZero tiles alreadyProcessed =
+clearPath' : List Int -> Model -> List Int -> List Int
+clearPath' maybeZero model alreadyProcessed =
     case maybeZero of
         [] ->
             []
@@ -99,12 +99,12 @@ clearPath' boardSize maybeZero tiles alreadyProcessed =
         head :: tail ->
             let
                 tileIsZero =
-                    hasNeighouringBombs head tiles
+                    hasNeighouringBombs head model.tiles
 
                 toTest =
                     if tileIsZero then
                         head
-                            |> Board.surroundingSquare boardSize
+                            |> Board.surroundingSquare model.square
                             |> Set.fromList
                             |> Set.union (Set.fromList tail)
                             |> (flip Set.diff (Set.fromList alreadyProcessed))
@@ -112,4 +112,4 @@ clearPath' boardSize maybeZero tiles alreadyProcessed =
                     else
                         tail
             in
-                head :: (clearPath' boardSize toTest tiles (head :: alreadyProcessed))
+                head :: (clearPath' toTest model (head :: alreadyProcessed))
