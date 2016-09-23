@@ -99,7 +99,7 @@ exposeTiles boardSize index tiles =
 clearPath : Int -> Int -> TileList -> List Int
 clearPath boardSize index tiles =
     if hasNeighouringBombs index tiles then
-        clearPath' boardSize [ index ] tiles [] []
+        clearPath' boardSize [ index ] tiles []
     else
         []
 
@@ -112,11 +112,11 @@ hasNeighouringBombs index tiles =
         |> Maybe.withDefault False
 
 
-clearPath' : Int -> List Int -> TileList -> List Int -> List Int -> List Int
-clearPath' boardSize maybeZero tiles soFar alreadyProcessed =
+clearPath' : Int -> List Int -> TileList -> List Int -> List Int
+clearPath' boardSize maybeZero tiles alreadyProcessed =
     let
         d =
-            Debug.log "clearPath" (toString (maybeZero) ++ " (" ++ toString (soFar) ++ ")")
+            Debug.log "clearPath" (toString (maybeZero) ++ " (" ++ toString (alreadyProcessed) ++ ")")
     in
         case maybeZero of
             [] ->
@@ -136,16 +136,8 @@ clearPath' boardSize maybeZero tiles soFar alreadyProcessed =
                     set =
                         Set.fromList tail
 
-                    surrounding =
-                        (happo)
-                            |> Set.fromList
-                            |> Set.union set
-                            |> (flip Set.diff (Set.fromList soFar))
-                            |> Set.toList
-
-                    xsf =
-                        Debug.log "surroundingi" (List.Extras.takeIndices surrounding tiles)
-
+                    -- xsf =
+                    --     Debug.log "surroundingi" (List.Extras.takeIndices surrounding tiles)
                     toTest =
                         Debug.log "sofar"
                             ((happo)
@@ -161,13 +153,12 @@ clearPath' boardSize maybeZero tiles soFar alreadyProcessed =
                         (if isZero then
                             let
                                 dd =
-                                    Debug.log "clearPath..." ("new 0 " ++ toString (surrounding))
+                                    Debug.log "clearPath..." ("new 0 " ++ toString (alreadyProcessed))
                             in
                                 head
                                     :: (clearPath' boardSize
                                             toTest
                                             tiles
-                                            (surrounding)
                                             (head :: alreadyProcessed)
                                        )
                          else
@@ -175,7 +166,7 @@ clearPath' boardSize maybeZero tiles soFar alreadyProcessed =
                                 dd =
                                     Debug.log "clearPath..." "nonZero"
                             in
-                                head :: (clearPath' boardSize tail tiles soFar (head :: alreadyProcessed))
+                                head :: (clearPath' boardSize tail tiles (head :: alreadyProcessed))
                         )
 
 
