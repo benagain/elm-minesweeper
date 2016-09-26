@@ -6,6 +6,7 @@ import List.Extra
 import List.Extras exposing (updateAt', mapIndices)
 import Tuple2 exposing (mapFst)
 import Set exposing (Set)
+import Guards exposing (..)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -53,17 +54,18 @@ markMe tile =
 expose : Int -> Model -> Model
 expose index model =
     let
-        detonated =
+        wasDetonated =
             model.tiles
                 |> List.Extra.getAt index
                 |> Maybe.map (fst >> Board.isBomb)
-                |> Maybe.withDefault False
 
         updateNeighbours =
-            if detonated then
-                exposeAll
-            else
-                clearSafePath index model
+            case wasDetonated of
+                Just True ->
+                    exposeAll
+
+                _ ->
+                    clearSafePath index model
     in
         { model
             | tiles =
@@ -113,19 +115,20 @@ exposeTile tile =
 
 
 clearPath : Int -> Model -> List Int
-clearPath index tiles =
-    if hasNeighouringBombs index tiles.tiles then
-        clearPath' [ index ] tiles []
-    else
-        []
+clearPath index model =
+    case neighouringBombs index model.tiles of
+        Just 0 ->
+            clearPath' [ index ] model []
+
+        _ ->
+            []
 
 
-hasNeighouringBombs : Int -> TileList -> Bool
-hasNeighouringBombs index tiles =
+neighouringBombs : Int -> TileList -> Maybe Int
+neighouringBombs index tiles =
     tiles
         |> List.Extra.getAt index
-        |> Maybe.map (snd >> ((==) 0))
-        |> Maybe.withDefault False
+        |> Maybe.map snd
 
 
 {-| Determine all tiles that have don't neighouring bombs and their immediate surrounding tiles that do
@@ -138,18 +141,17 @@ clearPath' maybeZero model alreadyProcessed =
 
         head :: tail ->
             let
-                tileIsZero =
-                    hasNeighouringBombs head model.tiles
-
                 toTest =
-                    if tileIsZero then
-                        head
-                            |> Board.surroundingSquare model.square
-                            |> Set.fromList
-                            |> Set.union (Set.fromList tail)
-                            |> (flip Set.diff (Set.fromList alreadyProcessed))
-                            |> Set.toList
-                    else
-                        tail
+                    case neighouringBombs head model.tiles of
+                        Just 0 ->
+                            head
+                                |> Board.surroundingSquare model.square
+                                |> Set.fromList
+                                |> Set.union (Set.fromList tail)
+                                |> (flip Set.diff (Set.fromList alreadyProcessed))
+                                |> Set.toList
+
+                        _ ->
+                            tail
             in
                 head :: (clearPath' toTest model (head :: alreadyProcessed))
