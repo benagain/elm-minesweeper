@@ -61,11 +61,9 @@ expose index model =
 
         updateNeighbours =
             if detonated then
-                -- Expose everything
-                List.map (mapFst exposeTile)
+                exposeAll
             else
-                -- Expose neighours of neighbours that don't have bombs
-                List.Extras.mapIndices (mapFst exposeTile) (clearPath index model)
+                clearSafePath index model
     in
         { model
             | tiles =
@@ -75,6 +73,20 @@ expose index model =
         }
 
 
+exposeAll : TileList -> TileList
+exposeAll list =
+    List.map (mapFst exposeTile) list
+
+
+{-| Expose neighours of neighbours that don't have bombs
+-}
+clearSafePath : Int -> Model -> TileList -> TileList
+clearSafePath index model list =
+    List.Extras.mapIndices (mapFst exposeTile) (clearPath index model) list
+
+
+{-| Expose a tile that has been clicked on
+-}
 exposeMe : Tile -> Tile
 exposeMe tile =
     case tile of
@@ -85,6 +97,8 @@ exposeMe tile =
             exposeTile other
 
 
+{-| Expose a tile that may not have been directly clicked on
+-}
 exposeTile : Tile -> Tile
 exposeTile tile =
     case (tile) of
